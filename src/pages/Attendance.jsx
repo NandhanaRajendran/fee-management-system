@@ -14,7 +14,9 @@ export default function Attendance() {
   useEffect(() => {
     const fetchStudents = async () => {
       try {
-        const response = await fetch(`https://mess-management-system-q6us.onrender.com/api/students/room/${roomId}`);
+        const response = await fetch(
+          `https://mess-management-system-q6us.onrender.com/api/students/room/${roomId}`,
+        );
         if (!response.ok) {
           throw new Error("Failed to fetch students");
         }
@@ -32,28 +34,28 @@ export default function Attendance() {
   function getDailyRecord(person) {
     return {
       present: person.attendanceRecords?.[date] ?? false,
-      messcut: person.messCutRecords?.[date] ?? false
+      messcut: person.messCutRecords?.[date] ?? false,
     };
   }
 
   async function updateStudentAction(id, updateData) {
     try {
-      const response = await fetch(`https://mess-management-system-q6us.onrender.com/api/students/${id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(updateData),
-      });
+      const response = await fetch(
+        `https://mess-management-system-q6us.onrender.com/api/students/${id}`,
+        {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(updateData),
+        },
+      );
 
-      if (!response.ok) {
-        throw new Error("Failed to update student");
-      }
-      
-      const updatedStudent = await response.json();
-      
-      setInmates(inmates.map(student => 
-        student._id === id ? updatedStudent : student
-      ));
+      if (!response.ok) throw new Error("Failed to update");
 
+      const response2 = await fetch(
+        `https://mess-management-system-q6us.onrender.com/api/students/room/${roomId}`,
+      );
+      const data = await response2.json();
+      setInmates(data);
     } catch (err) {
       console.error(err);
       alert("Error updating record");
@@ -64,17 +66,20 @@ export default function Attendance() {
     const student = inmates[index];
     const { present, messcut } = getDailyRecord(student);
 
-    const updatedAttendance = { ...student.attendanceRecords, [date]: !present };
+    const updatedAttendance = {
+      ...student.attendanceRecords,
+      [date]: !present,
+    };
     const updatedMessCut = { ...student.messCutRecords };
-    
+
     // Ensure mess cut has a boolean value if not present
     if (updatedMessCut[date] === undefined) {
       updatedMessCut[date] = false;
     }
 
-    updateStudentAction(student._id, { 
+    updateStudentAction(student._id, {
       attendanceRecords: updatedAttendance,
-      messCutRecords: updatedMessCut
+      messCutRecords: updatedMessCut,
     });
   }
 
@@ -89,9 +94,9 @@ export default function Attendance() {
       updatedAttendance[date] = false;
     }
 
-    updateStudentAction(student._id, { 
+    updateStudentAction(student._id, {
       messCutRecords: updatedMessCut,
-      attendanceRecords: updatedAttendance
+      attendanceRecords: updatedAttendance,
     });
   }
 
@@ -127,7 +132,9 @@ export default function Attendance() {
           </div>
         </div>
 
-        {error && <div style={{ color: "red", padding: "10px" }}>Error: {error}</div>}
+        {error && (
+          <div style={{ color: "red", padding: "10px" }}>Error: {error}</div>
+        )}
 
         <div className="table-responsive">
           <table className="attendance-table">
@@ -143,41 +150,53 @@ export default function Attendance() {
             <tbody>
               {loading ? (
                 <tr>
-                  <td colSpan="4" style={{ textAlign: "center", padding: "20px" }}>Loading...</td>
+                  <td
+                    colSpan="4"
+                    style={{ textAlign: "center", padding: "20px" }}
+                  >
+                    Loading...
+                  </td>
                 </tr>
               ) : inmates.length === 0 ? (
                 <tr>
-                  <td colSpan="4" style={{ textAlign: "center", padding: "20px" }}>No students found in this room.</td>
+                  <td
+                    colSpan="4"
+                    style={{ textAlign: "center", padding: "20px" }}
+                  >
+                    No students found in this room.
+                  </td>
                 </tr>
-              ) : inmates.map((person, index) => {
-                const { present, messcut } = getDailyRecord(person);
+              ) : (
+                inmates.map((person, index) => {
+                  const { present, messcut } = getDailyRecord(person);
 
-                return (
-                  <tr key={person._id}>
-                    <td>{person.name}</td>
+                  return (
+                    <tr key={person._id}>
+                      <td>{person.name}</td>
 
-                    <td>
-                      <button
-                        className={present ? "present" : "absent"}
-                        onClick={() => toggleAttendance(index)}
-                      >
-                        {present ? "Present" : "Absent"}
-                      </button>
-                    </td>
+                      <td>
+                        <button
+                          className={present ? "present" : "absent"}
+                          onClick={() => toggleAttendance(index)}
+                        >
+                          {present ? "Present" : "Absent"}
+                        </button>
+                      </td>
 
-                    <td>
-                      <button
-                        className={messcut ? "messcut-on" : "messcut-off"}
-                        onClick={() => toggleMessCut(index)}
-                      >
-                        {messcut ? "Cut" : "No Cut"}
-                      </button>
-                    </td>
+                      <td>
+                        <button
+                          className={messcut ? "messcut-on" : "messcut-off"}
+                          onClick={() => toggleMessCut(index)}
+                        >
+                          {messcut ? "Cut" : "No Cut"}
+                        </button>
+                      </td>
 
-                    <td>{calculateMonthlyAttendance(person)} Days</td>
-                  </tr>
-                );
-              })}
+                      <td>{calculateMonthlyAttendance(person)} Days</td>
+                    </tr>
+                  );
+                })
+              )}
             </tbody>
           </table>
         </div>
