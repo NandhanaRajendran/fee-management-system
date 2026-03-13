@@ -1,14 +1,13 @@
-import { useState } from "react";
-import Sidebar from "../components/Sidebar";
-import Header from "../components/Header";
-//import { expensesData } from "../data/expensesData";
-import { messExpenses } from "../data/messExpenses";
+import { useState, useEffect } from "react";
+import Layout from "../components/Layout";
 
 export default function Expenses() {
   const today = new Date().toISOString().split("T")[0];
   const currentMonth = new Date().toISOString().slice(0, 7);
 
-  const [expenses,setExpenses] = useState(messExpenses.data);
+  const [expenses, setExpenses] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
   const [title, setTitle] = useState("");
   const [amount, setAmount] = useState("");
@@ -17,30 +16,71 @@ export default function Expenses() {
   /* single month selector */
   const [selectedMonth, setSelectedMonth] = useState(currentMonth);
 
-  function addExpense(){
+  useEffect(() => {
+    fetchExpenses();
+  }, []);
 
-if(!title || !amount) return;
+  const fetchExpenses = async () => {
+    try {
+      const response = await fetch('http://localhost:5000/api/expenses');
+      if (!response.ok) throw new Error("Failed to fetch expenses");
+      const data = await response.json();
+      setExpenses(data);
+      setLoading(false);
+    } catch (err) {
+      setError(err.message);
+      setLoading(false);
+    }
+  };
 
-const newExpense = {
-id: Date.now(),
-title,
-amount: Number(amount),
-date,
-billMonth: selectedMonth
-};
+  async function addExpense() {
+    if (!title || !amount) return;
 
-messExpenses.data.push(newExpense);
+    const newExpense = {
+      title,
+      amount: Number(amount),
+      date,
+      billMonth: selectedMonth,
+    };
 
-setExpenses([...messExpenses.data]);
+    try {
+      const response = await fetch('http://localhost:5000/api/expenses', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(newExpense)
+      });
 
-setTitle("");
-setAmount("");
-setDate(today);
+      if (!response.ok) {
+        throw new Error("Failed to add expense");
+      }
 
-}
+      const savedExpense = await response.json();
+      setExpenses([...expenses, savedExpense]);
 
-  function deleteExpense(id) {
-    setExpenses(expenses.filter((exp) => exp.id !== id));
+      setTitle("");
+      setAmount("");
+      setDate(today);
+    } catch (err) {
+      console.error(err);
+      alert("Error adding expense");
+    }
+  }
+
+  async function deleteExpense(id) {
+    try {
+      const response = await fetch(`http://localhost:5000/api/expenses/${id}`, {
+        method: 'DELETE'
+      });
+
+      if (!response.ok) throw new Error("Failed to delete expense");
+      
+      setExpenses(expenses.filter((exp) => exp._id !== id));
+    } catch (err) {
+      console.error(err);
+      alert("Error deleting expense");
+    }
   }
 
   const monthlyExpenses = expenses.filter(
@@ -50,57 +90,55 @@ setDate(today);
   const total = monthlyExpenses.reduce((sum, e) => sum + e.amount, 0);
 
   return (
-    <div className="layout">
-      <Sidebar />
+    <Layout>
+      <div className="expenses-container">
+        <h2>Mess Expenses</h2>
 
-      <div className="main">
-        <Header />
+        {/* Month Selector */}
 
-        <div className="expenses-container">
-          <h2>Mess Expenses</h2>
+        <div style={{ marginBottom: "15px" }}>
+          <label>
+            <b>Month :</b>
+          </label>
 
-          {/* Month Selector */}
+          <input
+            type="month"
+            value={selectedMonth}
+            onChange={(e) => setSelectedMonth(e.target.value)}
+          />
+        </div>
 
-          <div style={{ marginBottom: "15px" }}>
-            <label>
-              <b>Month :</b>
-            </label>
+        {error && <div style={{ color: "red", padding: "10px" }}>Error: {error}</div>}
 
-            <input
-              type="month"
-              value={selectedMonth}
-              onChange={(e) => setSelectedMonth(e.target.value)}
-            />
-          </div>
+        {/* Expense Form */}
 
-          {/* Expense Form */}
+        <div className="expense-form">
+          <input
+            type="text"
+            placeholder="Expense title (Rice, Vegetables, Milk...)"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+          />
 
-          <div className="expense-form">
-            <input
-              type="text"
-              placeholder="Expense title (Rice, Vegetables, Milk...)"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-            />
+          <input
+            type="number"
+            placeholder="Amount"
+            value={amount}
+            onChange={(e) => setAmount(e.target.value)}
+          />
 
-            <input
-              type="number"
-              placeholder="Amount"
-              value={amount}
-              onChange={(e) => setAmount(e.target.value)}
-            />
+          <input
+            type="date"
+            value={date}
+            onChange={(e) => setDate(e.target.value)}
+          />
 
-            <input
-              type="date"
-              value={date}
-              onChange={(e) => setDate(e.target.value)}
-            />
+          <button onClick={addExpense} disabled={loading}>Add Expense</button>
+        </div>
 
-            <button onClick={addExpense}>Add Expense</button>
-          </div>
+        {/* Expense Table */}
 
-          {/* Expense Table */}
-
+        <div className="table-responsive">
           <table className="expense-table">
             <thead>
               <tr>
@@ -112,8 +150,16 @@ setDate(today);
             </thead>
 
             <tbody>
-              {monthlyExpenses.map((exp) => (
-                <tr key={exp.id}>
+              {loading ? (
+                 <tr>
+                   <td colSpan="4" style={{ textAlign: "center", padding: "20px" }}>Loading...</td>
+                 </tr>
+              ) : monthlyExpenses.length === 0 ? (
+                 <tr>
+                   <td colSpan="4" style={{ textAlign: "center", padding: "20px" }}>No expenses for this month.</td>
+                 </tr>
+              ) : monthlyExpenses.map((exp) => (
+                <tr key={exp._id}>
                   <td>{new Date(exp.date).toLocaleDateString()}</td>
                   <td>{exp.title}</td>
                   <td>₹{exp.amount}</td>
@@ -121,7 +167,7 @@ setDate(today);
                   <td>
                     <button
                       className="delete-btn"
-                      onClick={() => deleteExpense(exp.id)}
+                      onClick={() => deleteExpense(exp._id)}
                     >
                       Delete
                     </button>
@@ -130,12 +176,12 @@ setDate(today);
               ))}
             </tbody>
           </table>
+        </div>
 
-          <div className="expense-total">
-            Total Mess Expense ({selectedMonth}) : ₹{total}
-          </div>
+        <div className="expense-total">
+          Total Mess Expense ({selectedMonth}) : ₹{total}
         </div>
       </div>
-    </div>
+    </Layout>
   );
 }

@@ -1,5 +1,4 @@
-import Sidebar from "../components/Sidebar";
-import Header from "../components/Header";
+import Layout from "../components/Layout";
 import RoomCard from "../components/RoomCard";
 
 export default function Dashboard() {
@@ -11,26 +10,12 @@ export default function Dashboard() {
   ];
 
   return (
-
-    <div className="layout">
-
-      <Sidebar />
-
-      <div className="main">
-
-        <Header />
-
-        <div className="rooms">
-
-          {rooms.map((room,index)=>(
-            <RoomCard key={index} room={room}/>
-          ))}
-
-        </div>
-
+    <Layout>
+      <div className="rooms">
+        {rooms.map((room,index)=>(
+          <RoomCard key={index} room={room}/>
+        ))}
       </div>
-
-    </div>
-
+    </Layout>
   );
 }
