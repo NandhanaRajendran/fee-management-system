@@ -15,8 +15,8 @@ export default function MessBill() {
       try {
         setLoading(true);
         const [studentsRes, expensesRes] = await Promise.all([
-          fetch("http://localhost:5000/api/students"),
-          fetch("http://localhost:5000/api/expenses")
+          fetch("https://mess-management-system-q6us.onrender.com/api/students"),
+          fetch("https://mess-management-system-q6us.onrender.com/api/expenses")
         ]);
 
         if (!studentsRes.ok || !expensesRes.ok) {
