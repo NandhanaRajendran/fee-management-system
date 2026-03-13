@@ -20,6 +20,10 @@ const expenseRoutes = require('./routes/expenses');
 app.use('/api/students', studentRoutes);
 app.use('/api/expenses', expenseRoutes);
 
+app.get("/", (req, res) => {
+  res.send("Mess Management Backend Running");
+});
+
 app.get('/api/health', (req, res) => {
   res.status(200).json({ status: 'OK', message: 'Backend is running successfully.' });
 });
