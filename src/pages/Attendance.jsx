@@ -64,7 +64,7 @@ export default function Attendance() {
 
   function toggleAttendance(index) {
     const student = inmates[index];
-    const { present, messcut } = getDailyRecord(student);
+    const { present } = getDailyRecord(student);
 
     const updatedAttendance = {
       ...student.attendanceRecords,
@@ -85,7 +85,7 @@ export default function Attendance() {
 
   function toggleMessCut(index) {
     const student = inmates[index];
-    const { present, messcut } = getDailyRecord(student);
+    const { messcut } = getDailyRecord(student);
 
     const updatedMessCut = { ...student.messCutRecords, [date]: !messcut };
     const updatedAttendance = { ...student.attendanceRecords };
