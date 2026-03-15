@@ -1,4 +1,4 @@
-/* ADMIN LAYOUT */
+/* ================= ADMIN LAYOUT ================= */
 
 .admin-layout{
 display:flex;
@@ -61,7 +61,7 @@ display:flex;
 flex-direction:column;
 }
 
-/* HEADER */
+/* TOPBAR */
 
 .admin-topbar{
 display:flex;
@@ -122,7 +122,7 @@ font-size:13px;
 padding:25px;
 }
 
-/* DASHBOARD */
+/* ================= DASHBOARD ================= */
 
 .admin-container{
 padding:30px;
@@ -268,7 +268,7 @@ text-decoration:none;
 font-size:13px;
 }
 
-/* MOBILE */
+/* ================= MOBILE ================= */
 
 @media(max-width:900px){
 
@@ -299,8 +299,6 @@ font-size:12px;
 
 }
 
-/* SMALL MOBILE */
-
 @media(max-width:768px){
 
 .recent-grid{
@@ -309,8 +307,7 @@ grid-template-columns:1fr;
 
 }
 
-
-/* ================= STUDENTS PAGE ================= */
+/* ================= SHARED — HEADER ROW ================= */
 
 .students-header{
 display:flex;
@@ -342,7 +339,7 @@ cursor:pointer;
 font-size:13px;
 }
 
-/* FILTERS */
+/* ================= SHARED — FILTERS BAR ================= */
 
 .students-filters{
 background:white;
@@ -372,26 +369,142 @@ outline:none;
 font-size:13px;
 }
 
-.students-filters select{
-padding:7px 10px;
-border-radius:6px;
-border:1px solid #e5e7eb;
-font-size:13px;
-}
-
 .student-count{
 margin-left:auto;
 font-size:13px;
 color:#64748b;
 }
 
-/* TABLE */
+/* ================= SHARED — FILTER POPUP TRIGGER ================= */
+
+.filter-popup-trigger{
+display:flex;
+align-items:center;
+gap:6px;
+padding:7px 12px;
+border-radius:6px;
+border:1px solid #e5e7eb;
+background:white;
+font-size:13px;
+color:#374151;
+cursor:pointer;
+transition:all 0.15s ease;
+}
+
+.filter-popup-trigger:hover{
+background:#f1f5f9;
+border-color:#cbd5e1;
+}
+
+.filter-popup-trigger.disabled{
+background:#f8fafc;
+color:#cbd5e1;
+cursor:not-allowed;
+border-color:#f1f5f9;
+}
+
+.filter-clear{
+display:flex;
+align-items:center;
+justify-content:center;
+width:16px;
+height:16px;
+border-radius:50%;
+background:#cbd5e1;
+color:white;
+margin-left:2px;
+transition:background 0.15s;
+}
+
+.filter-clear:hover{
+background:#94a3b8;
+}
+
+/* ================= SHARED — FILTER POPUP ================= */
+
+.filter-popup{
+background:white;
+width:300px;
+max-width:95vw;
+border-radius:12px;
+padding:20px;
+box-shadow:0 8px 30px rgba(0,0,0,0.15);
+}
+
+.filter-popup-header{
+display:flex;
+align-items:flex-start;
+justify-content:space-between;
+margin-bottom:14px;
+}
+
+.filter-popup-header h3{
+font-size:15px;
+margin-bottom:2px;
+}
+
+.filter-popup-sub{
+font-size:12px;
+color:#64748b;
+margin-top:2px;
+}
+
+.filter-popup-list{
+display:flex;
+flex-direction:column;
+gap:4px;
+max-height:280px;
+overflow-y:auto;
+}
+
+.filter-popup-list::-webkit-scrollbar{
+width:4px;
+}
+
+.filter-popup-list::-webkit-scrollbar-thumb{
+background:#cbd5e1;
+border-radius:4px;
+}
+
+.filter-popup-option{
+display:flex;
+align-items:center;
+justify-content:space-between;
+padding:9px 12px;
+border-radius:8px;
+border:1px solid transparent;
+background:none;
+cursor:pointer;
+text-align:left;
+width:100%;
+font-size:13px;
+color:#1e293b;
+transition:all 0.15s ease;
+}
+
+.filter-popup-option:hover{
+background:#f1f5f9;
+border-color:#e5e7eb;
+}
+
+.filter-popup-option.selected{
+background:#eff6ff;
+border-color:#bfdbfe;
+color:#2563eb;
+font-weight:500;
+}
+
+/* ================= SHARED — TABLE ================= */
 
 .students-table-wrapper{
+width:100%;
+max-height:420px;
+overflow-y:auto;
+overflow-x:auto;
 background:white;
 border-radius:10px;
-overflow-x:auto;
 border:1px solid #e5e7eb;
+box-shadow:0 2px 6px rgba(0,0,0,0.05);
 }
 
 .students-table{
@@ -404,7 +517,11 @@ font-size:13px;
 background:#f8fafc;
 }
 
-.students-table th{
+.students-table thead th{
+position:sticky;
+top:0;
+background:#f8fafc;
+z-index:2;
 text-align:left;
 padding:12px;
 color:#64748b;
@@ -421,29 +538,6 @@ border-top:1px solid #f1f5f9;
 font-weight:500;
 }
 
-/* STUDENTS TABLE SCROLL */
-
-.students-table-wrapper{
-width:100%;
-max-height:420px;
-overflow-y:auto;
-overflow-x:auto;
-background:white;
-border-radius:10px;
-box-shadow:0 2px 6px rgba(0,0,0,0.05);
-}
-
-/* sticky table header */
-
-.students-table thead th{
-position:sticky;
-top:0;
-background:#f8fafc;
-z-index:2;
-}
-
-/* smooth scrollbar */
-
 .students-table-wrapper::-webkit-scrollbar{
 width:6px;
 height:6px;
@@ -454,7 +548,7 @@ background:#cbd5e1;
 border-radius:6px;
 }
 
-/* STATUS */
+/* ================= SHARED — STATUS BADGES ================= */
 
 .status{
 padding:4px 8px;
@@ -467,51 +561,44 @@ background:#dcfce7;
 color:#15803d;
 }
 
-/* ACTIONS */
+.status.hod{
+background:#fef3c7;
+color:#92400e;
+}
+
+.status.staff-advisor{
+background:#dcfce7;
+color:#15803d;
+}
+
+.status.faculty{
+background:#f1f5f9;
+color:#475569;
+}
+
+/* ================= SHARED — ACTIONS ================= */
 
 .actions{
 display:flex;
 gap:10px;
+align-items:center;
 }
 
 .action{
 cursor:pointer;
 }
 
-.action.view{
-color:#2563eb;
+.action.view{color:#2563eb;}
+.action.edit{color:#64748b;}
+.action.delete{color:#ef4444;}
+
+.protected-hint{
+font-size:13px;
+cursor:default;
+opacity:0.5;
 }
 
-.action.edit{
-color:#64748b;
-}
-
-.action.delete{
-color:#ef4444;
-}
-
-/* RESPONSIVE */
-
-@media(max-width:768px){
-
-.students-header{
-flex-direction:column;
-align-items:flex-start;
-gap:10px;
-}
-
-.student-count{
-width:100%;
-}
-
-.students-filters{
-flex-direction:column;
-align-items:flex-start;
-}
-
-}
-
-/* STUDENT MODAL */
+/* ================= SHARED — MODAL ================= */
 
 .modal-overlay{
 position:fixed;
@@ -593,7 +680,54 @@ color:white;
 cursor:pointer;
 }
 
-/* DEPARTMENTS */
+/* ================= SHARED — RESPONSIVE ================= */
+
+@media(max-width:768px){
+
+.students-header{
+flex-direction:column;
+align-items:flex-start;
+gap:10px;
+}
+
+.student-count{
+width:100%;
+}
+
+.students-filters{
+flex-direction:column;
+align-items:flex-start;
+}
+
+}
+
+/* ================= STAFF PAGE ================= */
+
+.staff-tabs{
+display:flex;
+gap:10px;
+margin-bottom:15px;
+}
+
+.tab{
+padding:8px 14px;
+border-radius:6px;
+background:#e2e8f0;
+border:none;
+cursor:pointer;
+font-size:13px;
+}
+
+.tab.active{
+background:#2563eb;
+color:white;
+}
+
+/* ================= DEPARTMENTS PAGE ================= */
+
+.departments-page{
+width:100%;
+}
 
 .department-grid{
 display:grid;
@@ -678,31 +812,243 @@ color:#64748b;
 font-size:13px;
 }
 
-@media(max-width:768px){
+/* CLASS ADVISORS section */
 
+.dept-classes-section{
+margin-top:16px;
+}
+
+.dept-classes-header{
+display:flex;
+align-items:center;
+justify-content:space-between;
+margin-bottom:8px;
+}
+
+.dept-classes-header label{
+font-size:11px;
+color:#64748b;
+}
+
+.add-class-btn{
+display:flex;
+align-items:center;
+gap:4px;
+font-size:12px;
+font-weight:500;
+color:#2563eb;
+background:#eff6ff;
+border:1px solid #bfdbfe;
+border-radius:5px;
+padding:3px 9px;
+cursor:pointer;
+transition:all 0.15s ease;
+}
+
+.add-class-btn:hover{
+background:#dbeafe;
+}
+
+.class-list{
+display:flex;
+flex-direction:column;
+gap:8px;
+margin-top:8px;
+}
+
+.class-row{
+display:flex;
+align-items:center;
+justify-content:space-between;
+background:#f8fafc;
+padding:8px 12px;
+border-radius:6px;
+border:1px solid #e5e7eb;
+}
+
+.class-sem-badge{
+font-size:12px;
+font-weight:600;
+color:#2563eb;
+background:#eff6ff;
+padding:3px 8px;
+border-radius:4px;
+border:1px solid #bfdbfe;
+}
+
+/* ADVISOR TRIGGER BUTTON */
+
+.advisor-trigger-btn{
+display:flex;
+align-items:center;
+gap:5px;
+padding:5px 10px;
+border-radius:6px;
+border:1px solid #e5e7eb;
+background:white;
+font-size:12px;
+color:#374151;
+cursor:pointer;
+transition:all 0.15s ease;
+}
+
+.advisor-trigger-btn:hover{
+background:#f1f5f9;
+border-color:#cbd5e1;
+}
+
+/* ADVISOR POPUP */
+
+.advisor-popup{
+background:white;
+width:320px;
+max-width:95vw;
+border-radius:12px;
+padding:20px;
+box-shadow:0 8px 30px rgba(0,0,0,0.15);
+}
+
+.advisor-popup-header{
+display:flex;
+justify-content:space-between;
+align-items:flex-start;
+margin-bottom:16px;
+}
+
+.advisor-popup-header h3{
+font-size:15px;
+margin-bottom:2px;
+}
+
+.advisor-popup-sub{
+font-size:12px;
+color:#64748b;
+}
+
+.advisor-popup-list{
+display:flex;
+flex-direction:column;
+gap:6px;
+max-height:260px;
+overflow-y:auto;
+}
+
+.advisor-popup-list::-webkit-scrollbar{width:4px;}
+
+.advisor-popup-list::-webkit-scrollbar-thumb{
+background:#cbd5e1;
+border-radius:4px;
+}
+
+.advisor-option{
+display:flex;
+align-items:center;
+gap:10px;
+padding:9px 10px;
+border-radius:8px;
+border:1px solid transparent;
+background:none;
+cursor:pointer;
+text-align:left;
+width:100%;
+transition:all 0.15s ease;
+}
+
+.advisor-option:hover{
+background:#f1f5f9;
+border-color:#e5e7eb;
+}
+
+.advisor-option.selected{
+background:#eff6ff;
+border-color:#bfdbfe;
+}
+
+.advisor-option.unassign{color:#94a3b8;}
+
+.advisor-option.unassign:hover{
+background:#fef2f2;
+border-color:#fecaca;
+color:#ef4444;
+}
+
+.advisor-option-avatar{
+width:32px;
+height:32px;
+border-radius:50%;
+background:#dbeafe;
+color:#2563eb;
+font-size:13px;
+font-weight:600;
+display:flex;
+align-items:center;
+justify-content:center;
+flex-shrink:0;
+}
+
+.advisor-option-avatar.none{
+background:#f1f5f9;
+color:#94a3b8;
+}
+
+.advisor-option-info{
+display:flex;
+flex-direction:column;
+flex:1;
+}
+
+.advisor-option-name{
+font-size:13px;
+font-weight:500;
+color:#1e293b;
+}
+
+.advisor-option-dept{
+font-size:11px;
+color:#94a3b8;
+}
+
+.advisor-selected-badge{
+font-size:10px;
+background:#dbeafe;
+color:#2563eb;
+padding:2px 7px;
+border-radius:10px;
+font-weight:500;
+}
+
+.advisor-empty{
+font-size:13px;
+color:#94a3b8;
+text-align:center;
+padding:16px 0;
+}
+
+@media(max-width:768px){
 .department-grid{
 grid-template-columns:1fr;
 }
-
 }
 
+/* ================= MODAL DEPT TRIGGER ================= */
 
-.staff-tabs{
+.modal-dept-trigger{
 display:flex;
-gap:10px;
-margin-bottom:15px;
-}
-
-.tab{
-padding:8px 14px;
+align-items:center;
+justify-content:space-between;
+width:100%;
+padding:8px 10px;
 border-radius:6px;
-background:#e2e8f0;
-border:none;
-cursor:pointer;
+border:1px solid #e5e7eb;
+background:white;
 font-size:13px;
+color:#374151;
+cursor:pointer;
+transition:all 0.15s ease;
+text-align:left;
 }
 
-.tab.active{
-background:#2563eb;
-color:white;
+.modal-dept-trigger:hover{
+border-color:#cbd5e1;
+background:#f9fafb;
 }

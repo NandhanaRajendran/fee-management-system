@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Search, Pencil, Trash2, Plus, X } from "lucide-react";
+import { Search, Pencil, Trash2, Plus, X, ChevronDown, Check } from "lucide-react";
 import "../../styles/admin.css";
 
 const initialStudents = [
@@ -10,7 +10,6 @@ const initialStudents = [
     department: "Computer Science",
     class: "S5",
     batch: "2023",
-    status: "Active",
   },
   {
     id: 2,
@@ -19,115 +18,68 @@ const initialStudents = [
     department: "EEE",
     class: "S3",
     batch: "2024",
-    status: "Inactive",
   },
 ];
 
+const DEPARTMENTS = ["Computer Science", "IT", "Mechanical", "ECE", "EEE", "Robotics & AI"];
+const CLASSES     = ["S1", "S2", "S3", "S4", "S5", "S6", "S7", "S8"];
+const BATCHES     = ["2024", "2023", "2022"];
+
 export default function Students() {
-  const [students, setStudents] = useState(initialStudents);
-
-  const [search, setSearch] = useState("");
-  const [departmentFilter, setDepartmentFilter] = useState("All");
-  const [classFilter, setClassFilter] = useState("All");
-  const [statusFilter, setStatusFilter] = useState("All");
-
-  const [showModal, setShowModal] = useState(false);
-
-  const [formData, setFormData] = useState({
-    name: "",
-    admission: "",
-    department: "",
-    class: "",
-    batch: "",
+  const [students, setStudents]             = useState(initialStudents);
+  const [search, setSearch]                 = useState("");
+  const [departmentFilter, setDepartmentFilter] = useState("");
+  const [classFilter, setClassFilter]       = useState("");
+  const [filterPopup, setFilterPopup]       = useState(null); // "dept" | "class" | null
+  const [showModal, setShowModal]           = useState(false);
+  const [formData, setFormData]             = useState({
+    name: "", admission: "", department: "", class: "", batch: "",
   });
 
-  const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
-    });
-  };
+  const handleChange = (e) =>
+    setFormData({ ...formData, [e.target.name]: e.target.value });
 
-  /* FILTER LOGIC */
-
-  const filteredStudents = students.filter((student) => {
+  /* FILTER */
+  const filteredStudents = students.filter((s) => {
     const searchMatch =
-      student.name.toLowerCase().includes(search.toLowerCase()) ||
-      student.admission.toLowerCase().includes(search.toLowerCase());
-
-    const departmentMatch =
-      departmentFilter === "All" || student.department === departmentFilter;
-
-    const classMatch = classFilter === "All" || student.class === classFilter;
-
-    const statusMatch =
-      statusFilter === "All" || student.status === statusFilter;
-
-    return searchMatch && departmentMatch && classMatch && statusMatch;
+      s.name.toLowerCase().includes(search.toLowerCase()) ||
+      s.admission.toLowerCase().includes(search.toLowerCase());
+    const deptMatch  = !departmentFilter || s.department === departmentFilter;
+    const classMatch = !classFilter      || s.class === classFilter;
+    return searchMatch && deptMatch && classMatch;
   });
 
-  /* ADD STUDENT */
+  /* ADD */
   const handleAddStudent = () => {
-    if (!formData.admission) {
-      alert("Admission number is required");
-      return;
+    if (!formData.admission) { alert("Admission number is required"); return; }
+    if (students.some((s) => s.admission === formData.admission)) {
+      alert("Admission number already exists!"); return;
     }
-
-    const admissionExists = students.some(
-      (s) => s.admission.toLowerCase() === formData.admission.toLowerCase(),
-    );
-
-    if (admissionExists) {
-      alert("Admission number already exists!");
-      return;
-    }
-
-    const newStudent = {
-      id: Date.now(),
-      ...formData,
-      status: "Active",
-    };
-
-    setStudents([...students, newStudent]);
-
-    setFormData({
-      name: "",
-      admission: "",
-      department: "",
-      class: "",
-      batch: "",
-    });
-
+    setStudents([...students, { id: Date.now(), ...formData }]);
+    setFormData({ name: "", admission: "", department: "", class: "", batch: "" });
     setShowModal(false);
   };
 
-  /* DELETE -> make inactive */
-
-  const handleDelete = (id) => {
-    setStudents(
-      students.map((s) => (s.id === id ? { ...s, status: "Inactive" } : s)),
-    );
-  };
+  /* DELETE */
+  const handleDelete = (id) => setStudents(students.filter((s) => s.id !== id));
 
   return (
     <div className="students-page">
-      {/* HEADER */}
 
+      {/* HEADER */}
       <div className="students-header">
         <div>
           <h1>Student Management</h1>
           <p>Manage student information and enrollments</p>
         </div>
-
         <button className="add-student-btn" onClick={() => setShowModal(true)}>
-          <Plus size={16} />
-          Add Student
+          <Plus size={16} /> Add Student
         </button>
       </div>
 
-      {/* SEARCH + FILTER */}
-
+      {/* FILTERS */}
       <div className="students-filters">
+
         <div className="search-box">
           <Search size={16} />
           <input
@@ -137,50 +89,45 @@ export default function Students() {
           />
         </div>
 
-        <select
-          value={departmentFilter}
-          onChange={(e) => setDepartmentFilter(e.target.value)}
+        {/* Department trigger */}
+        <button
+          className="filter-popup-trigger"
+          onClick={() => setFilterPopup(filterPopup === "dept" ? null : "dept")}
         >
-          <option value="All">All Departments</option>
-          <option>Computer Science</option>
-          <option>IT</option>
-          <option>Mechanical</option>
-          <option>ECE</option>
-          <option>EEE</option>
-          <option>Robotics & AI</option>
-        </select>
+          <span>{departmentFilter || "All Departments"}</span>
+          <ChevronDown size={14} />
+          {departmentFilter && (
+            <span
+              className="filter-clear"
+              onClick={(e) => { e.stopPropagation(); setDepartmentFilter(""); }}
+            >
+              <X size={11} />
+            </span>
+          )}
+        </button>
 
-        <select
-          value={classFilter}
-          onChange={(e) => setClassFilter(e.target.value)}
+        {/* Class trigger */}
+        <button
+          className="filter-popup-trigger"
+          onClick={() => setFilterPopup(filterPopup === "class" ? null : "class")}
         >
-          <option value="All">All Classes</option>
-          <option>S1</option>
-          <option>S2</option>
-          <option>S3</option>
-          <option>S4</option>
-          <option>S5</option>
-          <option>S6</option>
-          <option>S7</option>
-          <option>S8</option>
-        </select>
+          <span>{classFilter || "All Classes"}</span>
+          <ChevronDown size={14} />
+          {classFilter && (
+            <span
+              className="filter-clear"
+              onClick={(e) => { e.stopPropagation(); setClassFilter(""); }}
+            >
+              <X size={11} />
+            </span>
+          )}
+        </button>
 
-        <select
-          value={statusFilter}
-          onChange={(e) => setStatusFilter(e.target.value)}
-        >
-          <option value="All">All Status</option>
-          <option>Active</option>
-          <option>Inactive</option>
-        </select>
+        <span className="student-count">{filteredStudents.length} students found</span>
 
-        <span className="student-count">
-          {filteredStudents.length} students found
-        </span>
       </div>
 
       {/* TABLE */}
-
       <div className="students-table-wrapper">
         <table className="students-table">
           <thead>
@@ -190,117 +137,148 @@ export default function Students() {
               <th>DEPARTMENT</th>
               <th>BATCH</th>
               <th>CLASS</th>
-              <th>STATUS</th>
               <th>ACTIONS</th>
             </tr>
           </thead>
-
           <tbody>
-            {filteredStudents.map((student) => (
-              <tr key={student.id}>
-                <td>{student.name}</td>
-                <td>{student.admission}</td>
-                <td>{student.department}</td>
-                <td>{student.batch}</td>
-                <td>{student.class}</td>
-
-                <td>
-                  <span className={`status ${student.status.toLowerCase()}`}>
-                    {student.status}
-                  </span>
-                </td>
-
-                <td className="actions">
-                  <Pencil size={16} className="action edit" />
-
-                  <Trash2
-                    size={16}
-                    className="action delete"
-                    onClick={() => handleDelete(student.id)}
-                  />
+            {filteredStudents.length === 0 ? (
+              <tr>
+                <td colSpan={6} style={{ textAlign: "center", color: "#94a3b8", padding: "24px" }}>
+                  No students found
                 </td>
               </tr>
-            ))}
+            ) : (
+              filteredStudents.map((student) => (
+                <tr key={student.id}>
+                  <td>{student.name}</td>
+                  <td>{student.admission}</td>
+                  <td>{student.department}</td>
+                  <td>{student.batch}</td>
+                  <td>{student.class}</td>
+                  <td className="actions">
+                    <Pencil size={16} className="action edit" />
+                    <Trash2
+                      size={16}
+                      className="action delete"
+                      onClick={() => handleDelete(student.id)}
+                    />
+                  </td>
+                </tr>
+              ))
+            )}
           </tbody>
         </table>
       </div>
 
-      {/* ADD STUDENT MODAL */}
+      {/* ── DEPARTMENT FILTER POPUP ── */}
+      {filterPopup === "dept" && (
+        <div className="modal-overlay" onClick={() => setFilterPopup(null)}>
+          <div className="filter-popup" onClick={(e) => e.stopPropagation()}>
+            <div className="filter-popup-header">
+              <h3>Filter by Department</h3>
+              <button className="close-btn" onClick={() => setFilterPopup(null)}>
+                <X size={18} />
+              </button>
+            </div>
+            <div className="filter-popup-list">
+              <button
+                className={`filter-popup-option${!departmentFilter ? " selected" : ""}`}
+                onClick={() => { setDepartmentFilter(""); setFilterPopup(null); }}
+              >
+                <span>All Departments</span>
+                {!departmentFilter && <Check size={14} />}
+              </button>
+              {DEPARTMENTS.map((d) => (
+                <button
+                  key={d}
+                  className={`filter-popup-option${departmentFilter === d ? " selected" : ""}`}
+                  onClick={() => { setDepartmentFilter(d); setFilterPopup(null); }}
+                >
+                  <span>{d}</span>
+                  {departmentFilter === d && <Check size={14} />}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
 
+      {/* ── CLASS FILTER POPUP ── */}
+      {filterPopup === "class" && (
+        <div className="modal-overlay" onClick={() => setFilterPopup(null)}>
+          <div className="filter-popup" onClick={(e) => e.stopPropagation()}>
+            <div className="filter-popup-header">
+              <h3>Filter by Class</h3>
+              <button className="close-btn" onClick={() => setFilterPopup(null)}>
+                <X size={18} />
+              </button>
+            </div>
+            <div className="filter-popup-list">
+              <button
+                className={`filter-popup-option${!classFilter ? " selected" : ""}`}
+                onClick={() => { setClassFilter(""); setFilterPopup(null); }}
+              >
+                <span>All Classes</span>
+                {!classFilter && <Check size={14} />}
+              </button>
+              {CLASSES.map((c) => (
+                <button
+                  key={c}
+                  className={`filter-popup-option${classFilter === c ? " selected" : ""}`}
+                  onClick={() => { setClassFilter(c); setFilterPopup(null); }}
+                >
+                  <span className="class-sem-badge">{c}</span>
+                  {classFilter === c && <Check size={14} />}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── ADD STUDENT MODAL ── */}
       {showModal && (
         <div className="modal-overlay">
           <div className="modal">
             <div className="modal-header">
               <h3>Add New Student</h3>
-
               <button className="close-btn" onClick={() => setShowModal(false)}>
                 <X size={18} />
               </button>
             </div>
-
             <div className="modal-body">
               <label>Student Name</label>
-              <input
-                name="name"
-                placeholder="Enter student name"
-                onChange={handleChange}
-              />
+              <input name="name" placeholder="Enter student name" onChange={handleChange} />
 
               <label>Admission Number</label>
-              <input
-                name="admission"
-                placeholder="Enter admission number"
-                onChange={handleChange}
-              />
+              <input name="admission" placeholder="Enter admission number" onChange={handleChange} />
 
               <label>Department</label>
               <select name="department" onChange={handleChange}>
-                <option>Select department</option>
-                <option>Computer Science</option>
-                <option>IT</option>
-                <option>Mechanical</option>
-                <option>ECE</option>
-                <option>EEE</option>
-                <option>Robotics & AI</option>
+                <option value="">Select department</option>
+                {DEPARTMENTS.map((d) => <option key={d}>{d}</option>)}
               </select>
 
               <label>Batch</label>
               <select name="batch" onChange={handleChange}>
-                <option>Select batch</option>
-                <option>2024</option>
-                <option>2023</option>
-                <option>2022</option>
+                <option value="">Select batch</option>
+                {BATCHES.map((b) => <option key={b}>{b}</option>)}
               </select>
 
               <label>Class</label>
               <select name="class" onChange={handleChange}>
-                <option>Select class</option>
-                <option>S1</option>
-                <option>S2</option>
-                <option>S3</option>
-                <option>S4</option>
-                <option>S5</option>
-                <option>S6</option>
-                <option>S7</option>
-                <option>S8</option>
+                <option value="">Select class</option>
+                {CLASSES.map((c) => <option key={c}>{c}</option>)}
               </select>
             </div>
-
             <div className="modal-footer">
-              <button
-                className="cancel-btn"
-                onClick={() => setShowModal(false)}
-              >
-                Cancel
-              </button>
-
-              <button className="submit-btn" onClick={handleAddStudent}>
-                Add Student
-              </button>
+              <button className="cancel-btn" onClick={() => setShowModal(false)}>Cancel</button>
+              <button className="submit-btn" onClick={handleAddStudent}>Add Student</button>
             </div>
           </div>
         </div>
       )}
+
     </div>
   );
 }
