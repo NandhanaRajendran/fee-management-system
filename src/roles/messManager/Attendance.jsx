@@ -1,6 +1,6 @@
 import { useParams } from "react-router-dom";
 import { useState, useEffect } from "react";
-import Layout from "../components/Layout";
+import Layout from "../../components/Layout";
 
 export default function Attendance() {
   const { roomId } = useParams();

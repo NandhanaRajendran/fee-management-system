@@ -1,32 +1,4 @@
-/* Reset */
-
-*{
-margin:0;
-padding:0;
-box-sizing:border-box;
-font-family: "Segoe UI", sans-serif;
-}
-
-body{
-background:#f4f7ff;
-color:#1b2b52;
-}
-
-
-/* Layout */
-
-.layout{
-display:flex;
-min-height:100vh;
-}
-
-.main{
-flex:1;
-padding:30px;
-}
-
-
-/* Sidebar */
+/* SIDEBAR */
 
 .sidebar{
 width:230px;
@@ -34,8 +6,10 @@ background:#0a2a66;
 color:white;
 display:flex;
 flex-direction:column;
-justify-content:space-between;
 padding:25px;
+transition:left 0.3s ease;
+overflow-y:auto;
+position:relative;
 }
 
 .logo{
@@ -66,46 +40,87 @@ background:#2f6bff;
 color:white;
 }
 
-.logout{
-margin-top:30px;
-background:#ff4d4d !important;
-color:white !important;
+/* CLOSE BUTTON */
+
+.mobile-close-btn{
+display:none;
+position:absolute;
+top:12px;
+right:12px;
+font-size:20px;
+background:none;
+border:none;
+color:white;
+cursor:pointer;
 }
 
+/* HEADER */
 
-/* Header */
-
-.header{
+.header-card{
 background:white;
-padding:20px;
-border-radius:10px;
-box-shadow:0 4px 12px rgba(0,0,0,0.08);
-margin-bottom:25px;
-display: flex;
-align-items: center;
-gap: 20px;
-}
-
-.profile{
+border-radius:14px;
+padding:18px 20px;
 display:flex;
 align-items:center;
 gap:20px;
+box-shadow:0 4px 12px rgba(0,0,0,0.08);
+margin-bottom:25px;
+justify-content:space-between;
+flex-wrap:wrap;
+}
+
+/* HAMBURGER */
+
+.menu-icon{
+border:none;
+background:none;
+cursor:pointer;
+display:none;
+}
+
+/* PROFILE */
+
+.profile-section{
+display:flex;
+align-items:center;
+gap:18px;
+flex:1;
 }
 
 .avatar{
 width:70px;
 height:70px;
 border-radius:50%;
-background:#dbe5ff;
+background:#c7d2fe;
 }
 
+.profile-details p{
+margin:2px 0;
+font-size:15px;
+}
 
-/* Room Grid */
+/* LOGOUT */
+
+.logout-btn{
+display:flex;
+align-items:center;
+gap:6px;
+border:none;
+background:#ef4444;
+color:white;
+padding:8px 14px;
+border-radius:6px;
+cursor:pointer;
+font-size:14px;
+}
+
+/* ROOMS */
 
 .rooms{
 display:grid;
-grid-template-columns:repeat(auto-fill,minmax(160px,1fr));
+grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
 gap:20px;
+padding-bottom:40px;
 }
 
 .room-card{
@@ -125,303 +140,225 @@ color:white;
 transform:translateY(-4px);
 }
 
-
-/* Layout & Mobile Elements */
-
-.mobile-menu-btn {
-  display: none;
-  font-size: 24px;
-  background: none;
-  border: none;
-  color: #0a2a66;
-  cursor: pointer;
-}
-
-.sidebar-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 40px;
-}
-
-.sidebar-header .logo {
-  margin-bottom: 0;
-}
-
-.mobile-close-btn {
-  display: none;
-  font-size: 28px;
-  background: none;
-  border: none;
-  color: white;
-  cursor: pointer;
-}
-
-.mobile-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.4);
-  z-index: 999;
-}
-
-.table-responsive {
-  width: 100%;
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
-}
-
-/* Responsive */
-
-@media(max-width:900px){
-
-  .sidebar {
-    position: fixed;
-    top: 0;
-    left: -250px;
-    height: 100vh;
-    z-index: 1000;
-    transition: left 0.3s ease;
-    width: 250px;
-  }
-
-  .sidebar.open {
-    left: 0;
-  }
-
-  .mobile-close-btn {
-    display: block;
-  }
-
-  .mobile-menu-btn {
-    display: block;
-  }
-
-  .main {
-    padding: 15px;
-  }
-
-  .rooms {
-    grid-template-columns: repeat(2, 1fr);
-  }
-
-}
-
-
-/* Attendance Page */
+/* ATTENDANCE */
 
 .attendance-container{
-
 background:white;
 padding:25px;
 border-radius:10px;
 box-shadow:0 4px 10px rgba(0,0,0,0.08);
-
 }
 
 .attendance-header{
-
 display:flex;
 justify-content:space-between;
 align-items:center;
 margin-bottom:20px;
-
 }
 
 .date-box{
-
 display:flex;
 align-items:center;
 gap:10px;
-
 }
 
 .date-box input{
-
 padding:6px 10px;
 border-radius:6px;
 border:1px solid #ccc;
-
 }
 
-/* table */
-
 .attendance-table{
-
 width:100%;
 border-collapse:collapse;
-
 }
 
 .attendance-table th{
-
 background:#e8efff;
 padding:12px;
-
 }
 
 .attendance-table td{
-
 padding:12px;
 text-align:center;
 border-bottom:1px solid #eee;
-
 }
-
-.attendance-table td:first-child{
-
-text-align:left;
-font-weight:500;
-
-}
-
-
-/* buttons */
 
 .present{
-
 background:#2ecc71;
 color:white;
 border:none;
 padding:8px 14px;
 border-radius:6px;
 cursor:pointer;
-
 }
 
 .absent{
-
 background:#ff4d4d;
 color:white;
 border:none;
 padding:8px 14px;
 border-radius:6px;
 cursor:pointer;
-
 }
 
 .messcut-on{
-
 background:#ff7a00;
 color:white;
 border:none;
 padding:8px 14px;
 border-radius:6px;
 cursor:pointer;
-
 }
 
 .messcut-off{
-
 background:#d1d5db;
 border:none;
 padding:8px 14px;
 border-radius:6px;
 cursor:pointer;
-
 }
 
-
-/* mobile */
-
-@media(max-width:700px){
-
-.attendance-header{
-
-flex-direction:column;
-align-items:flex-start;
-gap:10px;
-
-}
-
-.attendance-table{
-
-font-size:14px;
-
-}
-
-}
-
-
-/* EXPENSES PAGE */
+/* EXPENSES */
 
 .expenses-container{
-
 background:white;
 padding:25px;
 border-radius:10px;
 box-shadow:0 4px 10px rgba(0,0,0,0.08);
-
 }
 
 .expense-form{
-
 display:flex;
 gap:10px;
 margin-bottom:20px;
 flex-wrap:wrap;
-
 }
 
 .expense-form input,
 .expense-form select{
-
 padding:8px;
 border:1px solid #ccc;
 border-radius:6px;
-
 }
 
 .expense-form button{
-
 background:#2f6bff;
 color:white;
 border:none;
 padding:8px 15px;
 border-radius:6px;
 cursor:pointer;
-
 }
 
 .expense-table{
-
 width:100%;
 border-collapse:collapse;
-
 }
 
 .expense-table th{
-
 background:#e8efff;
 padding:10px;
-
 }
 
 .expense-table td{
-
 padding:10px;
 border-bottom:1px solid #eee;
 text-align:center;
-
 }
 
-.delete-btn{
+/* LOGIN */
 
-background:#ff4d4d;
+.login-wrapper{
+height:100vh;
+display:flex;
+justify-content:center;
+align-items:center;
+background:#f3f4f6;
+}
+
+.login-card{
+background:white;
+padding:40px;
+border-radius:10px;
+width:350px;
+box-shadow:0 5px 15px rgba(0,0,0,0.1);
+}
+
+.login-card h2{
+text-align:center;
+margin-bottom:20px;
+}
+
+.login-card form{
+display:flex;
+flex-direction:column;
+gap:12px;
+}
+
+.login-card input{
+padding:10px;
+border:1px solid #ccc;
+border-radius:6px;
+}
+
+.login-card button{
+padding:10px;
+background:#2563eb;
 color:white;
 border:none;
-padding:5px 10px;
-border-radius:5px;
+border-radius:6px;
 cursor:pointer;
+}
+
+/* MOBILE */
+
+@media(max-width:900px){
+
+.sidebar{
+position:fixed;
+top:0;
+left:-250px;
+height:100vh;
+width:250px;
+z-index:1000;
+}
+
+.sidebar.open{
+left:0;
+}
+
+.mobile-close-btn{
+display:block;
+}
+
+.menu-icon{
+display:block;
+}
+
+.main{
+padding:15px;
+}
+
+.rooms{
+grid-template-columns:repeat(2,1fr);
+}
 
 }
 
-.expense-total{
+@media(max-width:480px){
 
-margin-top:15px;
-font-weight:bold;
-font-size:18px;
+.rooms{
+grid-template-columns:1fr;
+}
+
+.profile-details p{
+font-size:13px;
+}
+
+.avatar{
+width:55px;
+height:55px;
+}
 
 }

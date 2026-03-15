@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import Layout from "../components/Layout";
+import Layout from "../../components/Layout";
 
 export default function Expenses() {
   const today = new Date().toISOString().split("T")[0];

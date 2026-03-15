@@ -1,5 +1,6 @@
-import Layout from "../components/Layout";
-import RoomCard from "../components/RoomCard";
+
+import Layout from "../../components/Layout";
+import RoomCard from "../../components/RoomCard";
 
 export default function Dashboard() {
 

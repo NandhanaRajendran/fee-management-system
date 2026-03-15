@@ -1,32 +1,38 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import Sidebar from "./Sidebar";
 import Header from "./Header";
-import "../styles/main.css";
+import "../styles/mess.css";
 
 export default function Layout({ children }) {
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
-  const toggleMobileMenu = () => {
-    setIsMobileMenuOpen(!isMobileMenuOpen);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  const toggleMenu = () => {
+    setSidebarOpen(!sidebarOpen);
   };
 
-  const closeMobileMenu = () => {
-    setIsMobileMenuOpen(false);
+  const closeMenu = () => {
+    setSidebarOpen(false);
   };
 
   return (
     <div className="layout">
-      {/* Overlay to close sidebar on mobile */}
-      {isMobileMenuOpen && (
-        <div className={`mobile-overlay`} onClick={closeMobileMenu}></div>
-      )}
 
-      <Sidebar isOpen={isMobileMenuOpen} closeMenu={closeMobileMenu} />
+      <Sidebar isOpen={sidebarOpen} closeMenu={closeMenu} />
 
       <div className="main">
-        <Header toggleMobileMenu={toggleMobileMenu} />
+
+        <Header toggleMenu={toggleMenu} />
+
         {children}
+
       </div>
+
+      {/* overlay for mobile */}
+      {sidebarOpen && (
+        <div className="mobile-overlay" onClick={closeMenu}></div>
+      )}
+
     </div>
   );
 }

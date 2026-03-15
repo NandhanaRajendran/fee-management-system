@@ -6,7 +6,7 @@ export default function RoomCard({ room }) {
 
   const openRoom = () => {
 
-    navigate(`/attendance/${room}`);
+    navigate(`/mess/attendance/${room}`)
 
   };
 
