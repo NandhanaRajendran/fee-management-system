@@ -17,12 +17,14 @@ font-size:14px;
 .layout{
 display:flex;
 min-height:100vh;
+background:#f5f7fb;
 }
 
 .main{
 flex:1;
-padding:30px;
-overflow-y:auto;
+display:flex;
+flex-direction:column;
+overflow:hidden;
 }
 
 /* MOBILE OVERLAY */

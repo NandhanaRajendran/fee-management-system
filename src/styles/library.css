@@ -1,0 +1,457 @@
+/* LAYOUT */
+
+.lib-layout{
+display:flex;
+min-height:100vh;
+background:#f5f7fb;
+}
+
+.lib-main{
+flex:1;
+display:flex;
+flex-direction:column;
+overflow:hidden;
+}
+
+.lib-page{
+padding:25px;
+}
+
+/* SIDEBAR */
+
+.lib-sidebar{
+width:230px;
+background:#0a2a66;
+color:white;
+display:flex;
+flex-direction:column;
+padding:25px;
+transition:left 0.3s ease;
+overflow-y:auto;
+position:relative;
+flex-shrink:0;
+}
+
+.lib-sidebar-top{
+display:flex;
+justify-content:space-between;
+align-items:center;
+margin-bottom:40px;
+}
+
+.lib-logo{
+font-size:16px;
+font-weight:600;
+}
+
+.lib-close-btn{
+display:none;
+background:none;
+border:none;
+color:white;
+font-size:22px;
+cursor:pointer;
+}
+
+.lib-sidebar nav{
+display:flex;
+flex-direction:column;
+gap:15px;
+}
+
+.lib-sidebar nav button{
+padding:12px;
+border:none;
+border-radius:8px;
+background:white;
+color:#0a2a66;
+font-weight:600;
+cursor:pointer;
+transition:0.2s;
+}
+
+.lib-sidebar nav button:hover,
+.lib-sidebar nav button.active{
+background:#2f6bff;
+color:white;
+}
+
+/* HEADER */
+
+.lib-header{
+background:white;
+padding:15px 22px;
+display:flex;
+align-items:center;
+gap:15px;
+border-bottom:1px solid #eef2f7;
+}
+
+.lib-menu-btn{
+border:none;
+background:none;
+cursor:pointer;
+display:none;
+}
+
+.lib-profile{
+display:flex;
+align-items:center;
+gap:15px;
+flex:1;
+}
+
+.lib-avatar{
+width:42px;
+height:42px;
+border-radius:50%;
+background:#2563eb;
+color:white;
+font-size:14px;
+font-weight:700;
+display:flex;
+align-items:center;
+justify-content:center;
+flex-shrink:0;
+letter-spacing:0.5px;
+}
+
+.lib-name{
+font-weight:700;
+font-size:14px;
+margin:0;
+}
+
+.lib-role{
+font-size:13px;
+color:#64748b;
+margin:2px 0 0 0;
+}
+
+.lib-logout-btn{
+margin-left:auto;
+display:flex;
+align-items:center;
+gap:6px;
+border:none;
+background:#ef4444;
+color:white;
+padding:7px 12px;
+border-radius:6px;
+cursor:pointer;
+font-size:13px;
+}
+
+/* CONTAINER */
+
+.lib-container{
+background:white;
+padding:25px;
+border-radius:10px;
+box-shadow:0 4px 10px rgba(0,0,0,0.08);
+}
+
+/* PAGE HEADER */
+
+.lib-page-header{
+display:flex;
+justify-content:space-between;
+align-items:center;
+margin-bottom:22px;
+}
+
+.lib-page-header h2{
+font-size:18px;
+margin-bottom:4px;
+}
+
+.lib-page-header p{
+font-size:13px;
+color:#64748b;
+}
+
+/* ADD BUTTON */
+
+.lib-add-btn{
+background:#2563eb;
+color:white;
+border:none;
+padding:9px 16px;
+border-radius:8px;
+font-size:13px;
+font-weight:600;
+cursor:pointer;
+transition:0.2s;
+}
+
+.lib-add-btn:hover{
+background:#1d4ed8;
+}
+
+/* DUE COUNT BADGE */
+
+.lib-due-count{
+background:#fee2e2;
+color:#991b1b;
+padding:7px 14px;
+border-radius:8px;
+font-weight:700;
+font-size:13px;
+}
+
+/* FORM CARD */
+
+.lib-form-card{
+background:#f8fafc;
+border:1px solid #e5e7eb;
+border-radius:10px;
+padding:20px;
+margin-bottom:22px;
+}
+
+.lib-form-card h3{
+font-size:15px;
+margin-bottom:16px;
+}
+
+.lib-form-grid{
+display:grid;
+grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
+gap:14px;
+margin-bottom:16px;
+}
+
+.lib-field{
+display:flex;
+flex-direction:column;
+gap:5px;
+}
+
+.lib-field label{
+font-size:13px;
+font-weight:600;
+color:#374151;
+}
+
+.lib-field input{
+padding:8px 10px;
+border:1px solid #d1d5db;
+border-radius:6px;
+font-size:13px;
+background:white;
+}
+
+.lib-form-footer{
+display:flex;
+justify-content:flex-end;
+gap:10px;
+}
+
+.lib-cancel-btn{
+padding:8px 16px;
+border-radius:6px;
+border:1px solid #e5e7eb;
+background:#f1f5f9;
+cursor:pointer;
+font-size:13px;
+}
+
+.lib-submit-btn{
+padding:8px 16px;
+border-radius:6px;
+border:none;
+background:#2563eb;
+color:white;
+cursor:pointer;
+font-size:13px;
+font-weight:600;
+}
+
+/* DATE INPUT */
+
+.lib-date-input{
+width:100%;
+padding:8px 10px;
+border:1px solid #d1d5db;
+border-radius:6px;
+font-size:13px;
+background:white;
+cursor:pointer;
+color:#1e293b;
+}
+
+.lib-date-input::-webkit-calendar-picker-indicator{
+cursor:pointer;
+padding:3px;
+border-radius:4px;
+background-color:#eff6ff;
+}
+
+.lib-date-input::-webkit-calendar-picker-indicator:hover{
+background-color:#dbeafe;
+}
+
+/* DUE NOTE */
+
+.lib-due-note{
+font-size:13px;
+color:#64748b;
+background:#f8fafc;
+border:1px solid #e5e7eb;
+border-radius:6px;
+padding:10px 14px;
+margin-bottom:14px;
+}
+
+/* TABLE */
+
+.lib-table-wrap{
+width:100%;
+overflow-x:auto;
+border:1px solid #e5e7eb;
+border-radius:10px;
+}
+
+.lib-table{
+width:100%;
+border-collapse:collapse;
+font-size:13px;
+}
+
+.lib-table thead{
+background:#f8fafc;
+}
+
+.lib-table th{
+padding:12px;
+text-align:left;
+font-size:12px;
+color:#64748b;
+font-weight:600;
+border-bottom:1px solid #e5e7eb;
+}
+
+.lib-table td{
+padding:12px;
+border-bottom:1px solid #f1f5f9;
+}
+
+.lib-row-overdue{
+background:#fff7f7;
+}
+
+.lib-empty{
+text-align:center;
+padding:30px;
+color:#94a3b8;
+}
+
+/* BADGES */
+
+.lib-badge{
+padding:4px 10px;
+border-radius:20px;
+font-size:12px;
+font-weight:500;
+}
+
+.lib-badge.active{
+background:#dcfce7;
+color:#15803d;
+}
+
+.lib-badge.overdue{
+background:#fee2e2;
+color:#991b1b;
+}
+
+.lib-badge.returned{
+background:#f1f5f9;
+color:#475569;
+}
+
+/* RETURN BUTTON */
+
+.lib-return-btn{
+background:#eff6ff;
+color:#2563eb;
+border:1px solid #bfdbfe;
+padding:5px 12px;
+border-radius:6px;
+cursor:pointer;
+font-size:12px;
+font-weight:600;
+transition:0.2s;
+}
+
+.lib-return-btn:hover{
+background:#dbeafe;
+}
+
+/* FINE */
+
+.lib-fine-cell{
+font-weight:700;
+color:#991b1b;
+}
+
+.lib-fine-nil{
+color:#94a3b8;
+}
+
+/* FINE TOTAL */
+
+.lib-fine-total{
+margin-top:16px;
+text-align:right;
+font-size:15px;
+font-weight:700;
+color:#991b1b;
+}
+
+/* OVERLAY */
+
+.lib-overlay{
+position:fixed;
+top:0;
+left:0;
+width:100%;
+height:100%;
+background:rgba(0,0,0,0.4);
+z-index:999;
+}
+
+/* MOBILE */
+
+@media(max-width:900px){
+
+.lib-sidebar{
+position:fixed;
+top:0;
+left:-250px;
+height:100vh;
+width:250px;
+z-index:1000;
+}
+
+.lib-sidebar.open{
+left:0;
+}
+
+.lib-close-btn{
+display:block;
+}
+
+.lib-menu-btn{
+display:block;
+}
+
+}
+
+@media(max-width:600px){
+
+.lib-form-grid{
+grid-template-columns:1fr;
+}
+
+}

@@ -7,13 +7,8 @@ export default function Layout({ children }) {
 
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  const toggleMenu = () => {
-    setSidebarOpen(!sidebarOpen);
-  };
-
-  const closeMenu = () => {
-    setSidebarOpen(false);
-  };
+  const toggleMenu = () => setSidebarOpen(!sidebarOpen);
+  const closeMenu = () => setSidebarOpen(false);
 
   return (
     <div className="layout">
@@ -24,11 +19,12 @@ export default function Layout({ children }) {
 
         <Header toggleMenu={toggleMenu} />
 
-        {children}
+        <div className="page-content">
+          {children}
+        </div>
 
       </div>
 
-      {/* overlay for mobile */}
       {sidebarOpen && (
         <div className="mobile-overlay" onClick={closeMenu}></div>
       )}

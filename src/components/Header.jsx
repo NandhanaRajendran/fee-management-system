@@ -1,8 +1,7 @@
-import { Menu, LogOut } from "lucide-react";
+import { LogOut, Menu } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 export default function Header({ toggleMenu }) {
-
   const navigate = useNavigate();
 
   const handleLogout = () => {
@@ -20,21 +19,16 @@ export default function Header({ toggleMenu }) {
 
       {/* Profile Section */}
       <div className="profile-section">
-
-        <div className="avatar"></div>
-
-        <div className="profile-details">
-          <p><b>Name:</b> Nandhana</p>
-          <p><b>Admission no:</b> 12345</p>
-          <p><b>Dept:</b> CSE</p>
-          <p><b>Hostel:</b> Ladies Hostel</p>
+        <div className="avatar-circle">NR</div>
+        <div>
+          <p className="header-name">Nandhana</p>
+          <p className="header-role">Mess Manager</p>
         </div>
-
       </div>
 
       {/* Logout */}
       <button className="logout-btn" onClick={handleLogout}>
-        <LogOut size={16}/>
+        <LogOut size={16} />
         Logout
       </button>
 
