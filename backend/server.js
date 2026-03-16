@@ -8,9 +8,7 @@ const app = express();
 // Connect to database
 connectDB();
 
-app.use(cors({
-  origin: "https://mess-sec-page.netlify.app"
-}));
+app.use(cors());
 app.use(express.json());
 
 const PORT = process.env.PORT || 5000;
