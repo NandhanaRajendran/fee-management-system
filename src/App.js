@@ -23,6 +23,13 @@ import LibraryRoot from "./roles/library/LibraryRoot";
 import StudentList from "./roles/library/StudentList";
 import DueSheet from "./roles/library/DueSheet";
 
+import PrincipalDashboard from "./roles/principle/PrincipleDashboard";
+
+import HostelDashboard from "./roles/hostel/hostelDashboard";
+import InmateEnroll from "./roles/hostel/inmateEnrollment";
+import ViewHdf from "./roles/hostel/ViewHdf";
+import ViewRent from "./roles/hostel/ViewRent";
+
 function App() {
   return (
     <Router>
@@ -36,6 +43,12 @@ function App() {
         <Route path="/mess/expenses" element={<Expenses />} />
         <Route path="/mess/messbill" element={<MessBill />} />
         <Route path="/mess/add-inmates" element={<AddInmates />} />
+
+        <Route path="/principle/dashboard" element = {<PrincipalDashboard/>} />
+        <Route path="/hostel/dashboard" element = {<HostelDashboard/>}/>
+        <Route path="/hostel/enroll" element= {<InmateEnroll/>}/>
+        <Route path="/hostel/viewrent" element = {<ViewRent/>}/>
+        <Route path="/hostel/viewhdf" element = {<ViewHdf/>}/>
 
         <Route path="/admin" element={<AdminLayout />}>
           <Route path="dashboard" element={<AdminDashboard />} />

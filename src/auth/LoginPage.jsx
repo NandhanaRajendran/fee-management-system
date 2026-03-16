@@ -27,6 +27,21 @@ export default function LoginPage() {
       navigate("/library/students");
     }
 
+    else if (username === "student" && password === "1234") {
+      localStorage.setItem("role", "student");
+      navigate("/student/dashboard");
+    }
+
+    else if (username === "principle" && password === "1234") {
+      localStorage.setItem("role", "principle");
+      navigate("/principle/dashboard");
+    }
+
+    else if (username === "hostel" && password === "1234") {
+      localStorage.setItem("role", "role");
+      navigate("/hostel/dashboard");
+    }
+
     else {
       setError("Invalid username or password");
     }
