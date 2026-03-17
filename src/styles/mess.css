@@ -1,5 +1,11 @@
 /* SIDEBAR */
 
+.layout {
+    background:linear-gradient(135deg,#7bc5f7 0%,#f0f9ff 40%,#7bc5f7 100%);
+}
+.page-content {
+    padding: 3%;
+}
 .sidebar{
 width:230px;
 background:#0a2a66;
@@ -16,6 +22,7 @@ position:relative;
 text-align:center;
 margin-bottom:40px;
 font-weight:600;
+
 }
 
 .sidebar nav{
@@ -527,3 +534,4 @@ font-size:13px;
 }
 
 }
+

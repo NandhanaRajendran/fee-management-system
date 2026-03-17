@@ -32,9 +32,9 @@ export default function LoginPage() {
       navigate("/student/dashboard");
     }
 
-    else if (username === "principle" && password === "1234") {
-      localStorage.setItem("role", "principle");
-      navigate("/principle/dashboard");
+    else if (username === "principal" && password === "1234") {
+      localStorage.setItem("role", "principal");
+      navigate("/principal/dashboard");
     }
 
     else if (username === "hostel" && password === "1234") {

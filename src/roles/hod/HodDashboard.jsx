@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 
 /* ─────────────────────────────────────────────
    MOCK DATA
@@ -387,6 +388,7 @@ function FeeManagement({ toast }) {
     >{label}</button>
   );
 
+  
   return (
     <>
       <Card>
@@ -777,6 +779,11 @@ export default function App() {
     { id:"fee-cat",  label:"Fee Categories" },
     { id:"due-sheet",label:"Due Sheet"       },
   ];
+  const navigate = useNavigate();
+    const handleLogout = () => {
+      localStorage.removeItem("user");
+      navigate("/login");
+    };
 
   return (
     <>
@@ -806,8 +813,10 @@ export default function App() {
           <div style={{ width:36, height:36, borderRadius:"50%", background:C.sky100, display:"flex", alignItems:"center", justifyContent:"center", color:C.sky600 }}>
             <Icon.User />
           </div>
+
+          
           <button
-            onClick={() => toast("Logged out", "success")}
+            onClick={handleLogout}
             style={{
               display:"flex", alignItems:"center", gap:6, background:"none",
               border:`1px solid ${C.slate200}`, borderRadius:8, padding:"6px 14px",

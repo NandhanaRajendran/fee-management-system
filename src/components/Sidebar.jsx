@@ -8,7 +8,7 @@ export default function Sidebar({ isOpen, closeMenu }) {
     <div className={`sidebar ${isOpen ? "open" : ""}`}>
 
       <div className="sidebar-header">
-        <h2 className="logo">Hostel</h2>
+        <h2 className="logo"  >Hostel</h2>
 
         {/* close button only mobile */}
         <button className="mobile-close-btn" onClick={closeMenu}>
@@ -17,7 +17,7 @@ export default function Sidebar({ isOpen, closeMenu }) {
       </div>
 
       <nav>
-        <button onClick={() => { navigate("/mess/dashboard"); closeMenu(); }}>
+        <button  onClick={() => { navigate("/mess/dashboard"); closeMenu(); }}>
           Attendance
         </button>
 

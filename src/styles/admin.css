@@ -3,7 +3,7 @@
 .admin-layout{
 display:flex;
 min-height:100vh;
-background:#f5f7fb;
+background:linear-gradient(135deg,#7bc5f7 0%,#f0f9ff 40%,#7bc5f7 100%);
 }
 
 /* SIDEBAR */
@@ -22,6 +22,7 @@ transition:left 0.3s ease;
 font-size:16px;
 font-weight:600;
 margin-bottom:30px;
+
 }
 
 .admin-sidebar nav{
