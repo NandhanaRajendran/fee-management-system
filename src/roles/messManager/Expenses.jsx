@@ -17,6 +17,7 @@ export default function Expenses() {
   const [selectedBill, setSelectedBill] = useState(null);
   const [selectedMonth, setSelectedMonth] = useState(currentMonth);
   const [isCommon, setIsCommon] = useState(false);
+  const [quantity, setQuantity] = useState("");
 
   useEffect(() => {
     fetchExpenses();
@@ -25,7 +26,7 @@ export default function Expenses() {
   const fetchExpenses = async () => {
     try {
       const response = await fetch(
-        "https://mess-management-system-q6us.onrender.com/api/expenses"
+        "https://mess-management-system-q6us.onrender.com/api/expenses",
       );
       if (!response.ok) throw new Error("Failed to fetch expenses");
       const data = await response.json();
@@ -51,6 +52,7 @@ export default function Expenses() {
     formData.append("date", date);
     formData.append("billMonth", selectedMonth);
     formData.append("isCommon", isCommon);
+    formData.append("quantity", quantity);
 
     if (bill) {
       formData.append("bill", bill);
@@ -62,7 +64,7 @@ export default function Expenses() {
         {
           method: "POST",
           body: formData, // ❗ important
-        }
+        },
       );
 
       if (!response.ok) throw new Error("Failed to add expense");
@@ -76,7 +78,7 @@ export default function Expenses() {
       setDate(today);
       setBill(null);
       setIsCommon(false);
-
+      setQuantity("");
     } catch (err) {
       console.error(err);
       alert("Error adding expense");
@@ -87,7 +89,7 @@ export default function Expenses() {
     try {
       const response = await fetch(
         `https://mess-management-system-q6us.onrender.com/api/expenses/${id}`,
-        { method: "DELETE" }
+        { method: "DELETE" },
       );
 
       if (!response.ok) throw new Error("Failed to delete expense");
@@ -100,7 +102,7 @@ export default function Expenses() {
   }
 
   const monthlyExpenses = expenses.filter(
-    (exp) => exp.billMonth === selectedMonth
+    (exp) => exp.billMonth === selectedMonth,
   );
 
   const total = monthlyExpenses.reduce((sum, e) => sum + e.amount, 0);
@@ -112,7 +114,9 @@ export default function Expenses() {
 
         {/* Month Selector */}
         <div style={{ marginBottom: "15px" }}>
-          <label><b>Month :</b></label>
+          <label>
+            <b>Month :</b>
+          </label>
           <input
             type="month"
             value={selectedMonth}
@@ -121,19 +125,23 @@ export default function Expenses() {
         </div>
 
         {error && (
-          <div style={{ color: "red", padding: "10px" }}>
-            Error: {error}
-          </div>
+          <div style={{ color: "red", padding: "10px" }}>Error: {error}</div>
         )}
 
         {/* FORM */}
         <div className="expense-form">
-
           <input
             type="text"
             placeholder="Expense title"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
+          />
+
+          <input
+            type="text"
+            placeholder="Quantity (e.g. 10kg, 5L)"
+            value={quantity}
+            onChange={(e) => setQuantity(e.target.value)}
           />
 
           <input
@@ -157,8 +165,15 @@ export default function Expenses() {
           />
 
           {/* ✅ MONTH END COMMON BILL */}
-          {new Date(date).getDate() === new Date(new Date(date).getFullYear(), new Date(date).getMonth() + 1, 0).getDate() && (
-            <label style={{ display: "flex", gap: "6px", alignItems: "center" }}>
+          {new Date(date).getDate() ===
+            new Date(
+              new Date(date).getFullYear(),
+              new Date(date).getMonth() + 1,
+              0,
+            ).getDate() && (
+            <label
+              style={{ display: "flex", gap: "6px", alignItems: "center" }}
+            >
               <input
                 type="checkbox"
                 checked={isCommon}
@@ -180,6 +195,7 @@ export default function Expenses() {
               <tr>
                 <th>Payment Date</th>
                 <th>Title</th>
+                <th>Quantity</th>
                 <th>Amount</th>
                 <th>Action</th>
                 <th>Bill</th>
@@ -189,13 +205,19 @@ export default function Expenses() {
             <tbody>
               {loading ? (
                 <tr>
-                  <td colSpan="5" style={{ textAlign: "center", padding: "20px" }}>
+                  <td
+                    colSpan="5"
+                    style={{ textAlign: "center", padding: "20px" }}
+                  >
                     Loading...
                   </td>
                 </tr>
               ) : monthlyExpenses.length === 0 ? (
                 <tr>
-                  <td colSpan="5" style={{ textAlign: "center", padding: "20px" }}>
+                  <td
+                    colSpan="5"
+                    style={{ textAlign: "center", padding: "20px" }}
+                  >
                     No expenses for this month.
                   </td>
                 </tr>
@@ -214,7 +236,7 @@ export default function Expenses() {
                         exp.title
                       )}
                     </td>
-
+                    <td>{exp.quantity || "-"}</td>
                     <td>₹{exp.amount}</td>
 
                     {/* DELETE */}
@@ -256,16 +278,21 @@ export default function Expenses() {
       {selectedBill && (
         <div className="bill-overlay">
           <div className="bill-modal">
-
             <div className="bill-header">
               <h3>Bill Details</h3>
               <button onClick={() => setSelectedBill(null)}>✕</button>
             </div>
 
             <div className="bill-info">
-              <p><b>Title:</b> {selectedBill.title}</p>
-              <p><b>Amount:</b> ₹{selectedBill.amount}</p>
-              <p><b>Date:</b> {new Date(selectedBill.date).toLocaleDateString()}</p>
+              <p>
+                <b>Title:</b> {selectedBill.title}
+              </p>
+              <p>
+                <b>Amount:</b> ₹{selectedBill.amount}
+              </p>
+              <p>
+                <b>Date:</b> {new Date(selectedBill.date).toLocaleDateString()}
+              </p>
             </div>
 
             <div className="bill-preview">
@@ -281,7 +308,6 @@ export default function Expenses() {
                 />
               )}
             </div>
-
           </div>
         </div>
       )}

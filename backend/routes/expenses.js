@@ -33,10 +33,10 @@ router.post('/', upload.single('bill'), async (req, res) => {
       amount: req.body.amount,
       date: req.body.date,
       billMonth: req.body.billMonth,
-
-      // ✅ NEW FIELDS
       bill: req.file ? req.file.filename : null,
-      isCommon: req.body.isCommon === "true"
+      isCommon: req.body.isCommon === "true",
+      quantity: req.body.quantity
+
     });
 
     const newExpense = await expense.save();
