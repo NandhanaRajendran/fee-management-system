@@ -1,5 +1,20 @@
 const mongoose = require('mongoose');
 
+const attendanceSchema = new mongoose.Schema({
+    date: {
+        type: String,   
+        required: true
+    },
+    present: {
+        type: Boolean,
+        default: true
+    },
+    messCut: {
+        type: Boolean,
+        default: false
+    }
+});
+
 const studentSchema = new mongoose.Schema({
     name: {
         type: String,
@@ -9,16 +24,9 @@ const studentSchema = new mongoose.Schema({
         type: String,
         required: true,
     },
-    attendanceRecords: {
-        type: Map,
-        of: Boolean,
-        default: {},
-    },
-    messCutRecords: {
-        type: Map,
-        of: Boolean,
-        default: {},
-    }
+
+    attendance: [attendanceSchema]
+
 }, { timestamps: true });
 
 module.exports = mongoose.model('Student', studentSchema);

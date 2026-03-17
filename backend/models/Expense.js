@@ -16,7 +16,18 @@ const expenseSchema = new mongoose.Schema({
     billMonth: {
         type: String,
         required: true,
+    },
+
+    
+    bill: {
+        type: String,
+        default: null
+    },
+    isCommon: {
+        type: Boolean,
+        default: false
     }
+
 }, { timestamps: true });
 
 module.exports = mongoose.model('Expense', expenseSchema);

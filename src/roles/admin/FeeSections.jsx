@@ -7,9 +7,9 @@ const CATEGORY_OPTIONS = ["Academic", "Accommodation", "Extra-curricular", "Tran
 const initialFeeSections = [
   {
     id: 1,
-    name: "Tuition Fee",
+    name: "Accreditation Fee",
     category: "Academic",
-    responsibleStaff: "Ramesh Kumar",
+    responsibleStaff: "PTA Staff",
     username: "fee_tuition",
     password: "fee@tui123",
   },
@@ -17,7 +17,7 @@ const initialFeeSections = [
     id: 2,
     name: "Hostel Fee",
     category: "Accommodation",
-    responsibleStaff: "Sunita Sharma",
+    responsibleStaff: "Clerk",
     username: "fee_hostel",
     password: "fee@hos123",
   },
@@ -25,34 +25,27 @@ const initialFeeSections = [
     id: 3,
     name: "Lab Fee",
     category: "Academic",
-    responsibleStaff: "Prakash Verma",
+    responsibleStaff: "Hod",
     username: "fee_lab",
     password: "fee@lab123",
   },
   {
     id: 4,
-    name: "Exam Fee",
-    category: "Academic",
-    responsibleStaff: "Meena Pillai",
-    username: "fee_exam",
-    password: "fee@exa123",
+    name: "Mess bill",
+    category: "Hostel",
+    responsibleStaff: "Mess secretary",
+    username: "mess-sec",
+    password: "fee@mess123",
   },
   {
     id: 5,
     name: "Library Fee",
     category: "Academic",
-    responsibleStaff: "Arun Menon",
+    responsibleStaff: "Librarian",
     username: "fee_library",
     password: "fee@lib123",
   },
-  {
-    id: 6,
-    name: "Sports Fee",
-    category: "Extra-curricular",
-    responsibleStaff: "Divya Nair",
-    username: "fee_sports",
-    password: "fee@spo123",
-  },
+  
 ];
 
 const categoryColor = (cat) => {
