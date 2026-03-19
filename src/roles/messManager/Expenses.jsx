@@ -585,14 +585,14 @@ export default function Expenses() {
         </div>
 
         {/* SUMMARY */}
+      </div>
         <div className="summary-card">
-          <div>Expenses: ₹{expenseTotal}</div>
-          <div>Staff: ₹{staffTotal}</div>
+          <div>Food Expenses: ₹{expenseTotal}</div>
+          <div>Staff Salary: ₹{staffTotal}</div>
           <div>+ Prev Balance ({prevMonth}): ₹{prevBalance || 0}</div>
           <div>- Closing ({selectedMonth}): ₹{closingBalance || 0}</div>
           <div className="final">Final: ₹{finalTotal}</div>
         </div>
-      </div>
 
       {/* TOAST */}
       {toast && <AlertToast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
