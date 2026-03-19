@@ -1,3 +1,4 @@
+require("./keepAlive");
 const express = require('express');
 const cors = require('cors');
 const connectDB = require('./config/db');
@@ -17,9 +18,14 @@ const PORT = process.env.PORT || 5000;
 // Routes
 const studentRoutes = require('./routes/students');
 const expenseRoutes = require('./routes/expenses');
+// Add this to your server.js — a self-ping every 14 minutes
+// This keeps Render free tier from sleeping
+
 
 app.use('/api/students', studentRoutes);
 app.use('/api/expenses', expenseRoutes);
+app.use("/api/balance", require("./routes/balance"));
+app.use("/api/bill", require("./routes/bill"));
 
 app.get("/", (req, res) => {
   res.send("Mess Management Backend Running");

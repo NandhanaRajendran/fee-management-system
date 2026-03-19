@@ -1,119 +1,184 @@
 import { useParams } from "react-router-dom";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Layout from "../../components/Layout";
+import AlertToast from "../../components/Alerttoast";
+
+//const API = "http://localhost:5000";
+const API = "https://mess-management-system-q6us.onrender.com"; // ← uncomment for production
 
 export default function Attendance() {
   const { roomId } = useParams();
   const today = new Date().toISOString().split("T")[0];
-  const [date, setDate] = useState(today);
 
+  const [date, setDate] = useState(today);
   const [inmates, setInmates] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [isPublished, setIsPublished] = useState(false);
+  const [toast, setToast] = useState(null);
+  const showToast = (message, type = "info") => setToast({ message, type });
 
-  useEffect(() => {
-    const fetchStudents = async () => {
-      try {
-        const response = await fetch(
-          `https://mess-management-system-q6us.onrender.com/api/students/room/${roomId}`,
-        );
-        if (!response.ok) {
-          throw new Error("Failed to fetch students");
-        }
-        const data = await response.json();
-        setInmates(data);
-        setLoading(false);
-      } catch (err) {
-        setError(err.message);
-        setLoading(false);
-      }
-    };
-    fetchStudents();
+  const selectedMonth = date.slice(0, 7);
+
+  // ─── ALLOWED MONTHS: current and previous only ─────────────
+  function isAllowedMonth(m) {
+    const now = new Date();
+    const currentMonth = now.toISOString().slice(0, 7);
+    const prev = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+    const prevMonth = prev.toISOString().slice(0, 7);
+    return m === currentMonth || m === prevMonth;
+  }
+
+  const isEditable = isAllowedMonth(selectedMonth) && !isPublished;
+
+  // ─── FETCH STUDENTS ────────────────────────────────────────
+  const fetchStudents = useCallback(async () => {
+    try {
+      const response = await fetch(`${API}/api/students/room/${roomId}`);
+      if (!response.ok) throw new Error("Failed to fetch students");
+      const data = await response.json();
+      setInmates(data);
+      setLoading(false);
+    } catch (err) {
+      setError(err.message);
+      setLoading(false);
+    }
   }, [roomId]);
 
+  useEffect(() => {
+    fetchStudents();
+  }, [fetchStudents]);
+
+  // ─── FETCH PUBLISH STATUS ──────────────────────────────────
+  useEffect(() => {
+    const checkPublished = async () => {
+      try {
+        const billRes = await fetch(`${API}/api/bill/${selectedMonth}`);
+        const billData = billRes.ok ? await billRes.json() : {};
+        setIsPublished(billData?.published || false);
+      } catch (_) {
+        setIsPublished(false);
+      }
+    };
+    checkPublished();
+  }, [selectedMonth]);
+
+  // ─── DAILY RECORD ──────────────────────────────────────────
   function getDailyRecord(person) {
+    const record = person.attendance?.find((r) => r.date === date);
     return {
-      present: person.attendanceRecords?.[date] ?? false,
-      messcut: person.messCutRecords?.[date] ?? false,
+      present: record?.present ?? false,
+      messcut: record?.messCut ?? true,
     };
   }
 
-  async function updateStudentAction(id, updateData) {
+  // ─── MONTHLY COUNT ─────────────────────────────────────────
+  function calculateMonthlyAttendance(person) {
+    return (person.attendance || []).filter(
+      (r) => r.date.startsWith(selectedMonth) && r.messCut === false
+    ).length;
+  }
+
+  // ─── UPDATE ATTENDANCE ─────────────────────────────────────
+  async function updateAttendance(id, payload) {
+    if (!isAllowedMonth(selectedMonth)) {
+      showToast("You can only update attendance for the current or previous month.", "warning"); 
+      return;
+      
+    }
+    if (isPublished) {
+      showToast("Attendance is frozen — bill has been published.", "warning"); 
+      return;
+    }
     try {
-      const response = await fetch(
-        `https://mess-management-system-q6us.onrender.com/api/students/${id}`,
-        {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(updateData),
-        },
-      );
-
+      const response = await fetch(`${API}/api/students/attendance/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
       if (!response.ok) throw new Error("Failed to update");
-
-      const response2 = await fetch(
-        `https://mess-management-system-q6us.onrender.com/api/students/room/${roomId}`,
+      const updated = await response.json();
+      setInmates((prev) =>
+        prev.map((s) => (s._id === updated._id ? updated : s))
       );
-      const data = await response2.json();
-      setInmates(data);
     } catch (err) {
       console.error(err);
-      alert("Error updating record");
+      showToast("Error updating record. Is the server running?", "error");
     }
   }
 
   function toggleAttendance(index) {
     const student = inmates[index];
-    const { present } = getDailyRecord(student);
-
-    const updatedAttendance = {
-      ...student.attendanceRecords,
-      [date]: !present,
-    };
-    const updatedMessCut = { ...student.messCutRecords };
-
-    // Ensure mess cut has a boolean value if not present
-    if (updatedMessCut[date] === undefined) {
-      updatedMessCut[date] = false;
-    }
-
-    updateStudentAction(student._id, {
-      attendanceRecords: updatedAttendance,
-      messCutRecords: updatedMessCut,
-    });
+    const { present, messcut } = getDailyRecord(student);
+    updateAttendance(student._id, { date, present: !present, messCut: messcut });
   }
 
   function toggleMessCut(index) {
     const student = inmates[index];
-    const { messcut } = getDailyRecord(student);
-
-    const updatedMessCut = { ...student.messCutRecords, [date]: !messcut };
-    const updatedAttendance = { ...student.attendanceRecords };
-
-    if (updatedAttendance[date] === undefined) {
-      updatedAttendance[date] = false;
-    }
-
-    updateStudentAction(student._id, {
-      messCutRecords: updatedMessCut,
-      attendanceRecords: updatedAttendance,
-    });
+    const { present, messcut } = getDailyRecord(student);
+    updateAttendance(student._id, { date, present, messCut: !messcut });
   }
 
-  function calculateMonthlyAttendance(person) {
-    let total = 0;
+  // ─── DATE PICKER HELPERS ───────────────────────────────────
+  const MONTHS = [
+    "January","February","March","April","May","June",
+    "July","August","September","October","November","December"
+  ];
 
-    Object.keys(person.attendanceRecords || {}).forEach((d) => {
-      const present = person.attendanceRecords?.[d] ?? false;
-      const messcut = person.messCutRecords?.[d] ?? false;
+  const now       = new Date();
+  const nowYear   = now.getFullYear();
+  const nowMonth  = now.getMonth() + 1; // 1-based
+  const prevMonth = nowMonth === 1 ? 12 : nowMonth - 1;
+  const prevYear  = nowMonth === 1 ? nowYear - 1 : nowYear;
 
-      if (present && !messcut) {
-        total++;
+  // Only current year and previous year (deduplicated)
+  const YEAR_OPTIONS = [...new Set([prevYear, nowYear])];
+
+  const pickerYear  = parseInt(date.split("-")[0]);
+  const pickerMonth = parseInt(date.split("-")[1]);
+  const pickerDay   = parseInt(date.split("-")[2]);
+
+  // Month options: only the two allowed months for selected year
+  const MONTH_OPTIONS = MONTHS
+    .map((name, i) => ({ name, num: i + 1 }))
+    .filter(({ num }) => {
+      if (pickerYear === nowYear && nowYear === prevYear) {
+        return num === nowMonth || num === prevMonth;
       }
+      if (pickerYear === nowYear)  return num === nowMonth;
+      if (pickerYear === prevYear) return num === prevMonth;
+      return false;
     });
 
-    return total;
+  const daysInMonth = new Date(pickerYear, pickerMonth, 0).getDate();
+  const DAYS = Array.from({ length: daysInMonth }, (_, i) => i + 1);
+
+  function handlePickerYear(y) {
+    // Auto-select the correct allowed month for the chosen year
+    let m = pickerMonth;
+    if (y === nowYear && y !== prevYear)  m = nowMonth;
+    if (y === prevYear && y !== nowYear)  m = prevMonth;
+    const maxDay = new Date(y, m, 0).getDate();
+    const d = Math.min(pickerDay, maxDay);
+    setDate(`${y}-${String(m).padStart(2,"0")}-${String(d).padStart(2,"0")}`);
   }
+
+  function handlePickerMonth(m) {
+    const maxDay = new Date(pickerYear, m, 0).getDate();
+    const d = Math.min(pickerDay, maxDay);
+    setDate(`${pickerYear}-${String(m).padStart(2,"0")}-${String(d).padStart(2,"0")}`);
+  }
+
+  function handlePickerDay(d) {
+    setDate(`${pickerYear}-${String(pickerMonth).padStart(2,"0")}-${String(d).padStart(2,"0")}`);
+  }
+
+  const selectStyle = {
+    padding: "6px 10px", borderRadius: "8px",
+    border: "1px solid #dde3ef", fontSize: "13px",
+    fontFamily: "'DM Sans', sans-serif",
+    background: "#f8faff", cursor: "pointer",
+  };
 
   return (
     <Layout>
@@ -123,14 +188,54 @@ export default function Attendance() {
 
           <div className="date-box">
             <label>Date :</label>
+            <div style={{ display: "flex", gap: "6px", alignItems: "center" }}>
 
-            <input
-              type="date"
-              value={date}
-              onChange={(e) => setDate(e.target.value)}
-            />
+              {/* Day */}
+              <select
+                value={pickerDay}
+                onChange={(e) => handlePickerDay(Number(e.target.value))}
+                style={{ ...selectStyle, width: "64px" }}
+              >
+                {DAYS.map((d) => (
+                  <option key={d} value={d}>{String(d).padStart(2,"0")}</option>
+                ))}
+              </select>
+
+              {/* Month — only allowed months for selected year */}
+              <select
+                value={pickerMonth}
+                onChange={(e) => handlePickerMonth(Number(e.target.value))}
+                style={{ ...selectStyle, minWidth: "110px" }}
+              >
+                {MONTH_OPTIONS.map(({ name, num }) => (
+                  <option key={num} value={num}>{name}</option>
+                ))}
+              </select>
+
+              {/* Year — current and prev only */}
+              <select
+                value={pickerYear}
+                onChange={(e) => handlePickerYear(Number(e.target.value))}
+                style={{ ...selectStyle, width: "80px" }}
+              >
+                {YEAR_OPTIONS.map((y) => (
+                  <option key={y} value={y}>{y}</option>
+                ))}
+              </select>
+
+            </div>
           </div>
         </div>
+
+        {isPublished && (
+          <div style={{
+            background: "#fef9c3", border: "1px solid #fde047",
+            color: "#854d0e", padding: "10px 16px", borderRadius: "8px",
+            marginBottom: "12px", fontSize: "13px", fontWeight: "600",
+          }}>
+            🔒 Bill published — attendance for {MONTHS[pickerMonth - 1]} {pickerYear} is frozen.
+          </div>
+        )}
 
         {error && (
           <div style={{ color: "red", padding: "10px" }}>Error: {error}</div>
@@ -146,52 +251,39 @@ export default function Attendance() {
                 <th>Monthly Attendance</th>
               </tr>
             </thead>
-
             <tbody>
               {loading ? (
                 <tr>
-                  <td
-                    colSpan="4"
-                    style={{ textAlign: "center", padding: "20px" }}
-                  >
-                    Loading...
-                  </td>
+                  <td colSpan="4" style={{ textAlign: "center", padding: "20px" }}>Loading...</td>
                 </tr>
               ) : inmates.length === 0 ? (
                 <tr>
-                  <td
-                    colSpan="4"
-                    style={{ textAlign: "center", padding: "20px" }}
-                  >
-                    No students found in this room.
-                  </td>
+                  <td colSpan="4" style={{ textAlign: "center", padding: "20px" }}>No students found in this room.</td>
                 </tr>
               ) : (
                 inmates.map((person, index) => {
                   const { present, messcut } = getDailyRecord(person);
-
                   return (
                     <tr key={person._id}>
                       <td>{person.name}</td>
-
                       <td>
                         <button
+                          disabled={!isEditable}
                           className={present ? "present" : "absent"}
                           onClick={() => toggleAttendance(index)}
                         >
                           {present ? "Present" : "Absent"}
                         </button>
                       </td>
-
                       <td>
                         <button
+                          disabled={!isEditable}
                           className={messcut ? "messcut-on" : "messcut-off"}
                           onClick={() => toggleMessCut(index)}
                         >
                           {messcut ? "Cut" : "No Cut"}
                         </button>
                       </td>
-
                       <td>{calculateMonthlyAttendance(person)} Days</td>
                     </tr>
                   );
@@ -201,6 +293,8 @@ export default function Attendance() {
           </table>
         </div>
       </div>
+      {/* TOAST */}
+      {toast && <AlertToast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
     </Layout>
   );
 }

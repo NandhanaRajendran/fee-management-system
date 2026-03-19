@@ -23,27 +23,34 @@ router.get('/room/:room', async (req, res) => {
 });
 
 // PUT update attendance or mess cut
-router.put('/:id', async (req, res) => {
-    try {
-        const student = await Student.findById(req.params.id);
-        
-        if (!student) {
-            return res.status(404).json({ message: 'Student not found' });
-        }
+router.put("/attendance/:id", async (req, res) => {
+  try {
+    const { date, present, messCut } = req.body;
 
-        if (req.body.attendanceRecords) {
-            student.attendanceRecords = new Map(Object.entries(req.body.attendanceRecords));
-        }
+    const student = await Student.findById(req.params.id);
 
-        if (req.body.messCutRecords) {
-            student.messCutRecords = new Map(Object.entries(req.body.messCutRecords));
-        }
-
-        const updatedStudent = await student.save();
-        res.json(updatedStudent);
-    } catch (error) {
-        res.status(400).json({ message: error.message });
+    if (!student) {
+      return res.status(404).json({ message: "Student not found" });
     }
+
+    // 🔍 check if date already exists
+    const existing = student.attendance.find(a => a.date === date);
+
+    if (existing) {
+      existing.present = present;
+      existing.messCut = messCut;
+    } else {
+      student.attendance.push({ date, present, messCut });
+    }
+
+    await student.save();
+
+    res.json(student);
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: err.message });
+  }
 });
 
 module.exports = router;

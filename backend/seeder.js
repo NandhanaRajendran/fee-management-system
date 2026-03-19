@@ -9,7 +9,7 @@ connectDB();
 const roomsData = {
 "1101":[{ name:"Anjana" },{ name:"Devika" },{ name:"Sreya" }],
 "1102":[{ name:"Megha" },{ name:"Lakshmi" }],
-"1103":[{ name:"Athulya Babu" },{ name:"Aswathy A" },{ name:"Nandhana" }],
+"1103":[{ name:"Athulya Babu" },{ name:"Aswathy A" },{ name:"Nandhana" },{ name: "Tiyana"}],
 "1104":[{ name:"Arya" },{ name:"Gayathri" }],
 "1105":[{ name:"Meera" },{ name:"Sneha" },{ name:"Diya" }],
 "1106":[{ name:"Anu" },{ name:"Reshma" }],

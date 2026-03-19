@@ -29,9 +29,7 @@ export default function Sidebar({ isOpen, closeMenu }) {
           Mess Bill
         </button>
 
-        <button onClick={() => { navigate("/mess/add-inmates"); closeMenu(); }}>
-          Add Inmates
-        </button>
+        
       </nav>
 
     </div>

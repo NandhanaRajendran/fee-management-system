@@ -8,7 +8,7 @@ import Dashboard from "./roles/messManager/Dashboard";
 import Attendance from "./roles/messManager/Attendance";
 import Expenses from "./roles/messManager/Expenses";
 import MessBill from "./roles/messManager/MessBill";
-import AddInmates from "./roles/messManager/AddInmates";
+
 
 import AdminDashboard from "./roles/admin/AdminDashboard";
 import AdminLayout from "./roles/admin/AdminLayout";
@@ -26,7 +26,6 @@ import DueSheet from "./roles/library/DueSheet";
 import PrincipalDashboard from "./roles/principle/PrincipleDashboard";
 
 import HostelDashboard from "./roles/hostel/hostelDashboard";
-import InmateEnroll from "./roles/hostel/inmateEnrollment";
 import ViewHdf from "./roles/hostel/ViewHdf";
 import ViewRent from "./roles/hostel/ViewRent";
 
@@ -48,11 +47,11 @@ function App() {
         <Route path="/mess/attendance/:roomId" element={<Attendance />} />
         <Route path="/mess/expenses" element={<Expenses />} />
         <Route path="/mess/messbill" element={<MessBill />} />
-        <Route path="/mess/add-inmates" element={<AddInmates />} />
+       
 
         <Route path="/principal/dashboard" element = {<PrincipalDashboard/>} />
         <Route path="/hostel/dashboard" element = {<HostelDashboard/>}/>
-        <Route path="/hostel/enroll" element= {<InmateEnroll/>}/>
+        
         <Route path="/hostel/viewrent" element = {<ViewRent/>}/>
         <Route path="/hostel/viewhdf" element = {<ViewHdf/>}/>
         <Route path="/hod/dashboard" element = {<Hod/>}/>

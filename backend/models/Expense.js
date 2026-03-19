@@ -32,6 +32,14 @@ const expenseSchema = new mongoose.Schema(
       type: String,
       default: "",
     },
+    description: {
+      type: String,
+      default: "",
+    },
+    isStaff: {
+      type: Boolean,
+      default: false,
+    },
   },
   { timestamps: true },
 );
