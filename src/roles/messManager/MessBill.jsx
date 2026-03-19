@@ -3,7 +3,7 @@ import Layout from "../../components/Layout";
 import AlertToast from "../../components/Alerttoast";
 
 //const API = "http://localhost:5000";
-const API = "https://mess-management-system-q6us.onrender.com"; // ← uncomment for production
+ const API = "https://mess-management-system-q6us.onrender.com"; // ← uncomment for production
 
 export default function MessBill() {
   const currentMonth = new Date().toISOString().slice(0, 7);
@@ -77,7 +77,7 @@ export default function MessBill() {
   const monthlyAll = expenses.filter((exp) => exp.billMonth === selectedMonth);
   const foodExpenses = monthlyAll.filter((exp) => !exp.isStaff).reduce((sum, e) => sum + e.amount, 0);
   const staffExpenses = monthlyAll.filter((exp) => exp.isStaff).reduce((sum, e) => sum + e.amount, 0);
-  const totalMonthlyExpense = foodExpenses + staffExpenses;
+//  const totalMonthlyExpense = foodExpenses + staffExpenses;
 
   const totalAttendance = allStudents.reduce((sum, s) => sum + calculateAttendance(s), 0);
   const totalStudents = allStudents.length;
@@ -171,7 +171,7 @@ export default function MessBill() {
 
   return (
     <Layout>
-      <div className="expenses-container">
+      <div className="expenses-container" style={{ paddingBottom: "80px" }}>
 
         {/* HEADER ROW */}
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "16px", flexWrap: "wrap", gap: "10px" }}>
@@ -248,7 +248,7 @@ export default function MessBill() {
               color: "#1e40af", padding: "10px 16px", borderRadius: "8px",
               marginBottom: "14px", fontSize: "13px",
             }}>
-              ℹ️ <b>{MONTHS[nowM - 1]} {nowY}</b> bill cannot be published until the month ends.
+              ℹ️ <b>{MONTHS[nowM - 1]} {nowY}</b> bill cannot be published until the month ends. Switch to <b>{MONTHS[prevM - 1]} {prevY}</b> to publish.
             </div>
           ) : null;
         })()}
@@ -267,7 +267,7 @@ export default function MessBill() {
         )}
 
         {/* Student bill table */}
-        <div className="table-responsive" style={{ maxHeight: "400px", overflowY: "auto" }}>
+        <div className="table-responsive" style={{ maxHeight: "calc(100vh - 280px)", overflowY: "auto" }}>
           <table className="expense-table">
             <thead>
               <tr>
@@ -306,18 +306,18 @@ export default function MessBill() {
         </div>
 
         {/* Summary */}
-        <div className="expense-total" style={{ marginTop: "16px", lineHeight: "2" }}>
-          <div>Food Expenses : ₹{foodExpenses.toFixed(2)}</div>
-          <div>Staff Expenses : ₹{staffExpenses.toFixed(2)}</div>
-          <div>Total Expenses : ₹{totalMonthlyExpense.toFixed(2)}</div>
-          <div>+ Previous Balance : ₹{Number(balance.prevBalance || 0).toFixed(2)}</div>
-          <div>− Closing Balance : ₹{Number(balance.closingBalance || 0).toFixed(2)}</div>
-          <div>──────────────────────</div>
-          <div>Net Food Amount : ₹{netFoodAmount.toFixed(2)}</div>
-          <div>Total Attendance : {totalAttendance} days</div>
-          <div>Food Rate / Day : ₹{foodRatePerDay.toFixed(2)}</div>
-          <div>Staff Share / Student : ₹{staffRatePerStudent.toFixed(2)}</div>
-        </div>
+      </div>
+
+      {/* FIXED SUMMARY BAR — same style as Expenses page */}
+      <div className="summary-card">
+        <div>Food: ₹{foodExpenses.toFixed(2)}</div>
+        <div>Staff: ₹{staffExpenses.toFixed(2)}</div>
+        <div>+ Prev: ₹{Number(balance.prevBalance || 0).toFixed(2)}</div>
+        <div>− Closing: ₹{Number(balance.closingBalance || 0).toFixed(2)}</div>
+        <div>Attendance: {totalAttendance} days</div>
+        <div>Food Rate/Day: ₹{foodRatePerDay.toFixed(2)}</div>
+        <div>Staff/Student: ₹{staffRatePerStudent.toFixed(2)}</div>
+        
       </div>
     </Layout>
   );
