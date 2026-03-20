@@ -65,19 +65,64 @@ export default function MessBill() {
     fetchData();
   }, [selectedMonth]);
 
-  // ─── ATTENDANCE RULE ───────────────────────────────────────
-  // messCut = false → count (regardless of present/absent)
+  // ─── ATTENDANCE ALGORITHM ──────────────────────────────────
   function calculateAttendance(person) {
-    return (person.attendance || []).filter(
-      (r) => r.date.startsWith(selectedMonth) && r.messCut === false
-    ).length;
+    const records = person.attendance || [];
+    const month   = selectedMonth;
+    const [y, m]  = month.split("-").map(Number);
+    const daysInMonth = new Date(y, m, 0).getDate();
+
+    // Only count up to today
+    const todayStr = new Date().toISOString().split("T")[0];
+    const [ty, tm, td] = todayStr.split("-").map(Number);
+    const lastDay = (y === ty && m === tm) ? td : daysInMonth;
+
+    const chains = [];
+    let currentChain = null;
+
+    for (let d = 1; d <= lastDay; d++) {
+      const dateStr = `${y}-${String(m).padStart(2,"0")}-${String(d).padStart(2,"0")}`;
+      const rec     = records.find((r) => r.date === dateStr);
+
+      // Skip days with no record
+      if (!rec) {
+        if (currentChain) { chains.push(currentChain); currentChain = null; }
+        continue;
+      }
+
+      const present = rec.present;
+      const messCut = rec.messCut;
+
+      if (messCut) {
+        if (!currentChain) currentChain = { days: [], hasAbsentCut: false };
+        currentChain.days.push({ date: dateStr, present });
+        if (!present) currentChain.hasAbsentCut = true;
+      } else {
+        if (currentChain) { chains.push(currentChain); currentChain = null; }
+      }
+    }
+    if (currentChain) chains.push(currentChain);
+
+    const skipped = new Set();
+    for (const chain of chains) {
+      if (chain.hasAbsentCut || chain.days.length >= 3) {
+        chain.days.forEach((d) => skipped.add(d.date));
+      }
+    }
+
+    let count = 0;
+    for (let d = 1; d <= lastDay; d++) {
+      const dateStr = `${y}-${String(m).padStart(2,"0")}-${String(d).padStart(2,"0")}`;
+      const rec = records.find((r) => r.date === dateStr);
+      if (rec && !skipped.has(dateStr)) count++;
+    }
+    return count;
   }
 
   // ─── SPLIT EXPENSES ────────────────────────────────────────
   const monthlyAll = expenses.filter((exp) => exp.billMonth === selectedMonth);
   const foodExpenses = monthlyAll.filter((exp) => !exp.isStaff).reduce((sum, e) => sum + e.amount, 0);
   const staffExpenses = monthlyAll.filter((exp) => exp.isStaff).reduce((sum, e) => sum + e.amount, 0);
-//  const totalMonthlyExpense = foodExpenses + staffExpenses;
 
   const totalAttendance = allStudents.reduce((sum, s) => sum + calculateAttendance(s), 0);
   const totalStudents = allStudents.length;
@@ -126,8 +171,7 @@ export default function MessBill() {
     // Can only publish previous month's bill, not current month
     const currentMonthStr = `${nowY}-${String(nowM).padStart(2,"0")}`;
     if (selectedMonth === currentMonthStr) {
-      showToast(`Cannot publish ${MONTHS[nowM - 1]} ${nowY} bill yet — wait until the month ends.`, "warning");
-      return;
+      showToast(`Cannot publish ${MONTHS[nowM - 1]} ${nowY} bill yet — wait until the month ends.`, "warning"); return;
     }
     const confirm = window.confirm(
       `Publish final mess bill for ${selectedMonth}?\n\n⚠️ Once published:\n• Expenses for this month will be frozen\n• Attendance for this month will be frozen\n• This cannot be undone`
@@ -229,9 +273,9 @@ export default function MessBill() {
         <div style={{ marginBottom: "15px", display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap" }}>
           <label><b>Month :</b></label>
           <select
+            className="select-modern"
             value={selectedMonth}
             onChange={(e) => setSelectedMonth(e.target.value)}
-            style={{ padding: "7px 14px", borderRadius: "8px", border: "1px solid #dde3ef", fontSize: "13px", background: "#f8faff", cursor: "pointer" }}
           >
             {PERIOD_OPTIONS.map((opt) => (
               <option key={opt.value} value={opt.value}>{opt.label}</option>
@@ -310,13 +354,15 @@ export default function MessBill() {
 
       {/* FIXED SUMMARY BAR — same style as Expenses page */}
       <div className="summary-card">
-        <div>Food: ₹{foodExpenses.toFixed(2)}</div>
-        <div>Staff: ₹{staffExpenses.toFixed(2)}</div>
-        <div>+ Prev: ₹{Number(balance.prevBalance || 0).toFixed(2)}</div>
-        <div>− Closing: ₹{Number(balance.closingBalance || 0).toFixed(2)}</div>
-        <div>Attendance: {totalAttendance} days</div>
-        
-        
+        {[0, 1].map(i => (
+          <div key={i} className="summary-card-track">
+            <div>Food: ₹{foodExpenses.toFixed(2)}</div>
+            <div>Staff: ₹{staffExpenses.toFixed(2)}</div>
+            <div>Attendance: {totalAttendance} days</div>
+            <div>Food Rate/Day: ₹{foodRatePerDay.toFixed(2)}</div>
+            <div className="final">Staff/Student: ₹{staffRatePerStudent.toFixed(2)}</div>
+          </div>
+        ))}
       </div>
     </Layout>
   );

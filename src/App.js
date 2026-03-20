@@ -44,7 +44,7 @@ function App() {
         <Route path="/forgot-password" element={<ForgotPasswordPage />} />
 
         <Route path="/mess/dashboard" element={<Dashboard />} />
-        <Route path="/mess/attendance/:roomId" element={<Attendance />} />
+        <Route path="/mess/attendance" element={<Attendance />} />
         <Route path="/mess/expenses" element={<Expenses />} />
         <Route path="/mess/messbill" element={<MessBill />} />
        

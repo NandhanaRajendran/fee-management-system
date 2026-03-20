@@ -26,6 +26,7 @@ app.use('/api/students', studentRoutes);
 app.use('/api/expenses', expenseRoutes);
 app.use("/api/balance", require("./routes/balance"));
 app.use("/api/bill", require("./routes/bill"));
+app.use("/api/staff-attendance", require("./routes/staffAttendance"));
 
 app.get("/", (req, res) => {
   res.send("Mess Management Backend Running");

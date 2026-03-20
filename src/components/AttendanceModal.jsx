@@ -36,10 +36,10 @@ export default function AttendanceModal({ onClose }) {
   // FIX: parse date string directly (split by "-") instead of new Date()
   // to avoid UTC timezone shifting the day
   const formatAttendance = (records) => {
-    // Default: absent + mess cut for all days
+    // Default: no cut (needs food)
     const arr = Array(daysInMonth).fill(null).map(() => ({
       present: false,
-      messCut: true,
+      messCut: false,
     }));
 
     (records || []).forEach((r) => {
@@ -58,10 +58,10 @@ export default function AttendanceModal({ onClose }) {
 
   // ─── Cell color ────────────────────────────────────────────
   const getCellClass = (day) => {
-    if ( day.present && !day.messCut) return "cell-green";   // Present, no cut
-    if ( day.present &&  day.messCut) return "cell-purple";  // Present + cut
-    if (!day.present && !day.messCut) return "cell-yellow";  // Absent, no cut
-    return "cell-red";                                        // Absent + cut (default)
+    if ( day.present && !day.messCut) return "cell-green";
+    if ( day.present &&  day.messCut) return "cell-purple";
+    if (!day.present && !day.messCut) return "cell-yellow";
+    return "cell-red"; // absent + cut
   };
 
   // ─── Year options — current year and prev year ─────────────
@@ -109,7 +109,7 @@ export default function AttendanceModal({ onClose }) {
               Present
             </div>
             <div className="legend-box">
-              <div className="legend-color" style={{ background: "#ea00ff" }}></div>
+              <div className="legend-color" style={{ background: "#7f77dd" }}></div>
               Present + Cut
             </div>
             <div className="legend-box">
