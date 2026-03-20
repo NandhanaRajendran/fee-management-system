@@ -3,60 +3,131 @@ import Layout from "../../components/Layout";
 import AlertToast from "../../components/Alerttoast";
 
 //const API = "http://localhost:5000";
- const API = "https://mess-management-system-q6us.onrender.com";
+const API = "https://mess-management-system-q6us.onrender.com";
 // Staff salary rules
 const STAFF_RULES = {
-  "Cook Salary":   { ratePerDay: 710, label: "Cook",   maxDays: (dim) => dim - 1 },
-  "Matron Salary": { ratePerDay: 800, label: "Matron", maxDays: ()    => 27       },
+  "Cook Salary": { ratePerDay: 710, label: "Cook", maxDays: (dim) => dim - 1 },
+  "Matron Salary": { ratePerDay: 800, label: "Matron", maxDays: () => 27 },
 };
 
 export default function Expenses() {
-  const today        = new Date().toISOString().split("T")[0];
+
+  // ─── MODERN SELECT (inline) ────────────────────────────────
+function ModernSelect({ value, onChange, options, style, disabled }) {
+  const [isOpen, setIsOpen] = useState(false);
+  const containerRef = useRef(null);
+
+  useEffect(() => {
+    const handleOutsideClick = (e) => {
+      if (containerRef.current && !containerRef.current.contains(e.target)) {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleOutsideClick);
+    return () => document.removeEventListener("mousedown", handleOutsideClick);
+  }, []);
+
+  const selectedOpt = options.find((o) => String(o.value) === String(value)) || options[0];
+
+  return (
+    <div ref={containerRef} style={{ ...style, position: "relative", display: "inline-block" }}>
+      <div
+        onClick={() => !disabled && setIsOpen(!isOpen)}
+        style={{
+          padding: "8px 14px", paddingRight: "32px", borderRadius: "8px",
+          border: isOpen ? "1px solid #3b82f6" : "1px solid #e2e8f0",
+          backgroundColor: disabled ? "#f1f5f9" : "#ffffff",
+          color: disabled ? "#94a3b8" : "#334155",
+          fontSize: "13px", fontWeight: "600",
+          cursor: disabled ? "not-allowed" : "pointer",
+          userSelect: "none",
+          boxShadow: isOpen ? "0 0 0 3px rgba(59,130,246,0.1)" : "0 1px 2px rgba(0,0,0,0.05)",
+          backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2364748b'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`,
+          backgroundRepeat: "no-repeat", backgroundPosition: "right 10px center", backgroundSize: "14px",
+          opacity: disabled ? 0.65 : 1, width: "100%", boxSizing: "border-box", minHeight: "36px",
+          display: "flex", alignItems: "center",
+        }}
+      >
+        <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+          {selectedOpt ? selectedOpt.label : "Select"}
+        </span>
+      </div>
+
+      {isOpen && !disabled && (
+        <div style={{
+          position: "absolute", top: "calc(100% + 4px)", left: 0,
+          width: "100%", minWidth: "120px", maxHeight: "250px", overflowY: "auto",
+          backgroundColor: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "8px",
+          boxShadow: "0 10px 15px -3px rgba(0,0,0,0.1)",
+          zIndex: 9999, padding: "4px", boxSizing: "border-box",
+        }}>
+          {options.map((opt) => (
+            <div
+              key={opt.value}
+              onClick={() => { onChange({ target: { value: opt.value } }); setIsOpen(false); }}
+              onMouseEnter={(e) => { if (String(opt.value) !== String(value)) e.currentTarget.style.backgroundColor = "#f8fafc"; }}
+              onMouseLeave={(e) => { if (String(opt.value) !== String(value)) e.currentTarget.style.backgroundColor = "transparent"; }}
+              style={{
+                padding: "8px 12px", fontSize: "13px", fontWeight: "500",
+                color: String(opt.value) === String(value) ? "#1d4ed8" : "#334155",
+                backgroundColor: String(opt.value) === String(value) ? "#eff6ff" : "transparent",
+                borderRadius: "6px", cursor: "pointer", transition: "background-color 0.15s",
+              }}
+            >
+              {opt.label}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+  const today = new Date().toISOString().split("T")[0];
   const currentMonth = new Date().toISOString().slice(0, 7);
 
   const MONTHS = [
-    "January","February","March","April","May","June",
-    "July","August","September","October","November","December"
+    "January", "February", "March", "April", "May", "June",
+    "July", "August", "September", "October", "November", "December"
   ];
 
   const fileInputRef = useRef();
 
-  const [expenses,       setExpenses]       = useState([]);
-  const [error,          setError]          = useState("");
-  const [title,          setTitle]          = useState("");
-  const [amount,         setAmount]         = useState("");
-  const [date,           setDate]           = useState(today);
-  const [quantity,       setQuantity]       = useState("");
-  const [bill,           setBill]           = useState(null);
-  const [selectedBill,   setSelectedBill]   = useState(null);
-  const [selectedMonth,  setSelectedMonth]  = useState(currentMonth);
-  const [prevBalance,    setPrevBalance]    = useState("");
-  const [prevMonth,      setPrevMonth]      = useState("");
+  const [expenses, setExpenses] = useState([]);
+  const [error, setError] = useState("");
+  const [title, setTitle] = useState("");
+  const [amount, setAmount] = useState("");
+  const [date, setDate] = useState(today);
+  const [quantity, setQuantity] = useState("");
+  const [bill, setBill] = useState(null);
+  const [selectedBill, setSelectedBill] = useState(null);
+  const [selectedMonth, setSelectedMonth] = useState(currentMonth);
+  const [prevBalance, setPrevBalance] = useState("");
+  const [prevMonth, setPrevMonth] = useState("");
   const [closingBalance, setClosingBalance] = useState("");
-  const [staffType,      setStaffType]      = useState("");
-  const [staffAmount,    setStaffAmount]    = useState("");
-  const [staffSaving,    setStaffSaving]    = useState(false);
-  const [isLocked,       setIsLocked]       = useState(false);
-  const [saveStatus,     setSaveStatus]     = useState("");
-  const [isPublished,    setIsPublished]    = useState(false);
-  const [toast,          setToast]          = useState(null);
+  const [staffType, setStaffType] = useState("");
+  const [staffAmount, setStaffAmount] = useState("");
+  const [staffSaving, setStaffSaving] = useState(false);
+  const [isLocked, setIsLocked] = useState(false);
+  const [saveStatus, setSaveStatus] = useState("");
+  const [isPublished, setIsPublished] = useState(false);
+  const [toast, setToast] = useState(null);
 
   // Staff attendance — dailyRecords map from DB
   const [staffAtt, setStaffAtt] = useState({ "Cook Salary": {}, "Matron Salary": {} });
 
-  const isFrozen   = isLocked || isPublished;
-  const showToast  = (message, type = "info") => setToast({ message, type });
+  const isFrozen = isLocked || isPublished;
+  const showToast = (message, type = "info") => setToast({ message, type });
 
   // Days in selected month
   const [selY, selM] = selectedMonth.split("-").map(Number);
-  const daysInMonth  = new Date(selY, selM, 0).getDate();
+  const daysInMonth = new Date(selY, selM, 0).getDate();
 
   // Monthly count from dailyRecords (capped by rule)
   const calcSalary = (type) => {
     const records = staffAtt[type] || {};
-    const actual  = Object.entries(records).filter(([d, p]) => d.startsWith(selectedMonth) && p).length;
-    const max     = STAFF_RULES[type].maxDays(daysInMonth);
-    const days    = Math.min(actual, max);
+    const actual = Object.entries(records).filter(([d, p]) => d.startsWith(selectedMonth) && p).length;
+    const max = STAFF_RULES[type].maxDays(daysInMonth);
+    const days = Math.min(actual, max);
     return { actual, days, max, salary: days * STAFF_RULES[type].ratePerDay };
   };
 
@@ -92,9 +163,9 @@ export default function Expenses() {
         fetch(`${API}/api/staff-attendance/${selectedMonth}`),
       ]);
 
-      const data      = await res.json();
-      const prevData  = await prevRes.json();
-      const billData  = billRes.ok  ? await billRes.json()  : {};
+      const data = await res.json();
+      const prevData = await prevRes.json();
+      const billData = billRes.ok ? await billRes.json() : {};
       const staffData = staffRes.ok ? await staffRes.json() : [];
 
       setClosingBalance(data?.closingBalance || "");
@@ -130,7 +201,7 @@ export default function Expenses() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           month: selectedMonth,
-          prevBalance:    Number(prevBalance    || 0),
+          prevBalance: Number(prevBalance || 0),
           closingBalance: Number(closingBalance || 0),
         }),
       });
@@ -252,9 +323,9 @@ export default function Expenses() {
     }
   }
 
-  const monthlyAll      = expenses.filter((e) => e.billMonth === selectedMonth);
+  const monthlyAll = expenses.filter((e) => e.billMonth === selectedMonth);
   const monthlyExpenses = monthlyAll.filter((e) => !e.isStaff);
-  const monthlyStaff    = monthlyAll.filter((e) =>  e.isStaff);
+  const monthlyStaff = monthlyAll.filter((e) => e.isStaff);
 
   const nowM = new Date().getMonth() + 1;
   const nowY = new Date().getFullYear();
@@ -262,8 +333,8 @@ export default function Expenses() {
   const prevY = nowM === 1 ? nowY - 1 : nowY;
 
   const PERIOD_OPTIONS = [
-    { label: `${MONTHS[prevM - 1]} ${prevY}`, value: `${prevY}-${String(prevM).padStart(2,"0")}` },
-    { label: `${MONTHS[nowM - 1]} ${nowY}`,   value: `${nowY}-${String(nowM).padStart(2,"0")}` },
+    { label: `${MONTHS[prevM - 1]} ${prevY}`, value: `${prevY}-${String(prevM).padStart(2, "0")}` },
+    { label: `${MONTHS[nowM - 1]} ${nowY}`, value: `${nowY}-${String(nowM).padStart(2, "0")}` },
   ];
 
   const disabledStyle = { cursor: "not-allowed", background: "#f1f5f9", color: "#94a3b8" };
@@ -275,27 +346,21 @@ export default function Expenses() {
 
   return (
     <Layout>
-      <style>{`
-        .expenses-container input:disabled,
-        .expenses-container select:disabled,
-        .expenses-container button:disabled {
-          cursor: not-allowed !important;
-          opacity: 0.65;
-        }
-      `}</style>
+      
       <div className="expenses-container">
         <h2>Mess Expenses</h2>
 
         {/* TOP CONTROLS */}
         <div className="top-controls">
           <div>
-            <label>Period</label>
-            <select value={selectedMonth} onChange={(e) => { setSelectedMonth(e.target.value); setDate(today); }} style={{ width: "100%" }}>
-              {PERIOD_OPTIONS.map((opt) => (
-                <option key={opt.value} value={opt.value}>{opt.label}</option>
-              ))}
-            </select>
-          </div>
+  <label>Period</label>
+  <ModernSelect
+    value={selectedMonth}
+    onChange={(e) => { setSelectedMonth(e.target.value); setDate(today); }}
+    options={PERIOD_OPTIONS}
+    style={{ width: "100%" }}
+  />
+</div>
 
           <div>
             <label>Closing Balance of {prevMonth}</label>
@@ -324,7 +389,7 @@ export default function Expenses() {
                   ...btnBase,
                   background: saveStatus === "saved" ? "linear-gradient(135deg,#22c55e,#16a34a)"
                     : saveStatus === "error" ? "linear-gradient(135deg,#ef4444,#dc2626)"
-                    : "linear-gradient(135deg,#2f6bff,#1d4fd8)",
+                      : "linear-gradient(135deg,#2f6bff,#1d4fd8)",
                   color: "white", padding: "9px 20px", height: "38px",
                   boxShadow: "0 2px 8px rgba(47,107,255,0.28)",
                   opacity: saveStatus === "saving" ? 0.75 : 1,
@@ -369,7 +434,7 @@ export default function Expenses() {
           <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
             {Object.entries(STAFF_RULES).map(([type, rule]) => {
               const { actual, days, max, salary } = calcSalary(type);
-              const isCapped     = actual > max;
+              const isCapped = actual > max;
               const alreadySaved = expenses.some((e) => e.isStaff && e.billMonth === selectedMonth && e.title === type);
 
               return (
@@ -430,10 +495,16 @@ export default function Expenses() {
         <div className="card">
           <h4>Other Staff Charges</h4>
           <div className="form-row">
-            <select value={staffType} disabled={isPublished} style={isPublished ? disabledStyle : {}} onChange={(e) => setStaffType(e.target.value)}>
-              <option value="">Select type</option>
-              <option>Temporary Staff</option>
-            </select>
+            <ModernSelect
+  value={staffType}
+  onChange={(e) => setStaffType(e.target.value)}
+  disabled={isPublished}
+  options={[
+    { label: "Select type", value: "" },
+    { label: "Temporary Staff", value: "Temporary Staff" },
+  ]}
+  style={isPublished ? { ...disabledStyle, minWidth: "160px" } : { minWidth: "160px" }}
+/>
             <input type="number" placeholder="Amount" value={staffAmount} min="0.01" disabled={isPublished} style={isPublished ? disabledStyle : {}} onChange={(e) => setStaffAmount(e.target.value)} />
             <button onClick={addStaffCharge} disabled={staffSaving || isPublished} style={isPublished ? { cursor: "not-allowed", opacity: 0.5 } : {}}>
               {staffSaving ? "Saving..." : "Add"}

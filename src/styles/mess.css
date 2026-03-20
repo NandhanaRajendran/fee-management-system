@@ -517,6 +517,7 @@
   outline: none;
   appearance: auto;
   transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
+  
 }
 .select-modern:focus {
   border-color: #6366f1;

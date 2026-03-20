@@ -1,9 +1,129 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Layout from "../../components/Layout";
 import AlertToast from "../../components/Alerttoast";
 
 //const API = "http://localhost:5000";
- const API = "https://mess-management-system-q6us.onrender.com"; // ← uncomment for production
+const API = "https://mess-management-system-q6us.onrender.com"; // ← uncomment for production
+
+// ─── MODERN SELECT (inline, no separate file) ──────────────
+function ModernSelect({ value, onChange, options, style, disabled }) {
+  const [isOpen, setIsOpen] = useState(false);
+  const containerRef = useRef(null);
+
+  useEffect(() => {
+    const handleOutsideClick = (e) => {
+      if (containerRef.current && !containerRef.current.contains(e.target)) {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleOutsideClick);
+    return () => document.removeEventListener("mousedown", handleOutsideClick);
+  }, []);
+
+  const selectedOpt =
+    options.find((o) => String(o.value) === String(value)) || options[0];
+
+  return (
+    <div
+      ref={containerRef}
+      style={{ ...style, position: "relative", display: "inline-block" }}
+    >
+      <div
+        onClick={() => !disabled && setIsOpen(!isOpen)}
+        style={{
+          padding: "8px 14px",
+          paddingRight: "32px",
+          borderRadius: "8px",
+          border: isOpen ? "1px solid #3b82f6" : "1px solid #e2e8f0",
+          backgroundColor: disabled ? "#f1f5f9" : "#ffffff",
+          color: disabled ? "#94a3b8" : "#334155",
+          fontSize: "13px",
+          fontWeight: "600",
+          cursor: disabled ? "not-allowed" : "pointer",
+          userSelect: "none",
+          boxShadow: isOpen
+            ? "0 0 0 3px rgba(59,130,246,0.1)"
+            : "0 1px 2px rgba(0,0,0,0.05)",
+          backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2364748b'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`,
+          backgroundRepeat: "no-repeat",
+          backgroundPosition: "right 10px center",
+          backgroundSize: "14px",
+          opacity: disabled ? 0.65 : 1,
+          width: "100%",
+          boxSizing: "border-box",
+          minHeight: "36px",
+          display: "flex",
+          alignItems: "center",
+        }}
+      >
+        <span
+          style={{
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+            whiteSpace: "nowrap",
+          }}
+        >
+          {selectedOpt ? selectedOpt.label : "Select"}
+        </span>
+      </div>
+
+      {isOpen && !disabled && (
+        <div
+          style={{
+            position: "absolute",
+            top: "calc(100% + 4px)",
+            left: 0,
+            width: "100%",
+            minWidth: "120px",
+            maxHeight: "250px",
+            overflowY: "auto",
+            backgroundColor: "#ffffff",
+            border: "1px solid #e2e8f0",
+            borderRadius: "8px",
+            boxShadow: "0 10px 15px -3px rgba(0,0,0,0.1)",
+            zIndex: 9999,
+            padding: "4px",
+            boxSizing: "border-box",
+          }}
+        >
+          {options.map((opt) => (
+            <div
+              key={opt.value}
+              onClick={() => {
+                onChange({ target: { value: opt.value } });
+                setIsOpen(false);
+              }}
+              onMouseEnter={(e) => {
+                if (String(opt.value) !== String(value))
+                  e.currentTarget.style.backgroundColor = "#f8fafc";
+              }}
+              onMouseLeave={(e) => {
+                if (String(opt.value) !== String(value))
+                  e.currentTarget.style.backgroundColor = "transparent";
+              }}
+              style={{
+                padding: "8px 12px",
+                fontSize: "13px",
+                fontWeight: "500",
+                color:
+                  String(opt.value) === String(value) ? "#1d4ed8" : "#334155",
+                backgroundColor:
+                  String(opt.value) === String(value)
+                    ? "#eff6ff"
+                    : "transparent",
+                borderRadius: "6px",
+                cursor: "pointer",
+                transition: "background-color 0.15s",
+              }}
+            >
+              {opt.label}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
 
 export default function MessBill() {
   const currentMonth = new Date().toISOString().slice(0, 7);
@@ -31,14 +151,16 @@ export default function MessBill() {
         setLoading(true);
         setError("");
 
-        const [studentsRes, expensesRes, balanceRes, billStatusRes] = await Promise.all([
-          fetch(`${API}/api/students`),
-          fetch(`${API}/api/expenses`),
-          fetch(`${API}/api/balance/${selectedMonth}`),
-          fetch(`${API}/api/bill/${selectedMonth}`),
-        ]);
+        const [studentsRes, expensesRes, balanceRes, billStatusRes] =
+          await Promise.all([
+            fetch(`${API}/api/students`),
+            fetch(`${API}/api/expenses`),
+            fetch(`${API}/api/balance/${selectedMonth}`),
+            fetch(`${API}/api/bill/${selectedMonth}`),
+          ]);
 
-        if (!studentsRes.ok || !expensesRes.ok) throw new Error("Failed to fetch data");
+        if (!studentsRes.ok || !expensesRes.ok)
+          throw new Error("Failed to fetch data");
 
         const studentsData = await studentsRes.json();
         const expensesData = await expensesRes.json();
@@ -68,25 +190,28 @@ export default function MessBill() {
   // ─── ATTENDANCE ALGORITHM ──────────────────────────────────
   function calculateAttendance(person) {
     const records = person.attendance || [];
-    const month   = selectedMonth;
-    const [y, m]  = month.split("-").map(Number);
+    const month = selectedMonth;
+    const [y, m] = month.split("-").map(Number);
     const daysInMonth = new Date(y, m, 0).getDate();
 
     // Only count up to today
     const todayStr = new Date().toISOString().split("T")[0];
     const [ty, tm, td] = todayStr.split("-").map(Number);
-    const lastDay = (y === ty && m === tm) ? td : daysInMonth;
+    const lastDay = y === ty && m === tm ? td : daysInMonth;
 
     const chains = [];
     let currentChain = null;
 
     for (let d = 1; d <= lastDay; d++) {
-      const dateStr = `${y}-${String(m).padStart(2,"0")}-${String(d).padStart(2,"0")}`;
-      const rec     = records.find((r) => r.date === dateStr);
+      const dateStr = `${y}-${String(m).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
+      const rec = records.find((r) => r.date === dateStr);
 
       // Skip days with no record
       if (!rec) {
-        if (currentChain) { chains.push(currentChain); currentChain = null; }
+        if (currentChain) {
+          chains.push(currentChain);
+          currentChain = null;
+        }
         continue;
       }
 
@@ -98,7 +223,10 @@ export default function MessBill() {
         currentChain.days.push({ date: dateStr, present });
         if (!present) currentChain.hasAbsentCut = true;
       } else {
-        if (currentChain) { chains.push(currentChain); currentChain = null; }
+        if (currentChain) {
+          chains.push(currentChain);
+          currentChain = null;
+        }
       }
     }
     if (currentChain) chains.push(currentChain);
@@ -112,7 +240,7 @@ export default function MessBill() {
 
     let count = 0;
     for (let d = 1; d <= lastDay; d++) {
-      const dateStr = `${y}-${String(m).padStart(2,"0")}-${String(d).padStart(2,"0")}`;
+      const dateStr = `${y}-${String(m).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
       const rec = records.find((r) => r.date === dateStr);
       if (rec && !skipped.has(dateStr)) count++;
     }
@@ -121,15 +249,27 @@ export default function MessBill() {
 
   // ─── SPLIT EXPENSES ────────────────────────────────────────
   const monthlyAll = expenses.filter((exp) => exp.billMonth === selectedMonth);
-  const foodExpenses = monthlyAll.filter((exp) => !exp.isStaff).reduce((sum, e) => sum + e.amount, 0);
-  const staffExpenses = monthlyAll.filter((exp) => exp.isStaff).reduce((sum, e) => sum + e.amount, 0);
+  const foodExpenses = monthlyAll
+    .filter((exp) => !exp.isStaff)
+    .reduce((sum, e) => sum + e.amount, 0);
+  const staffExpenses = monthlyAll
+    .filter((exp) => exp.isStaff)
+    .reduce((sum, e) => sum + e.amount, 0);
 
-  const totalAttendance = allStudents.reduce((sum, s) => sum + calculateAttendance(s), 0);
+  const totalAttendance = allStudents.reduce(
+    (sum, s) => sum + calculateAttendance(s),
+    0,
+  );
   const totalStudents = allStudents.length;
 
-  const netFoodAmount = foodExpenses + Number(balance.prevBalance || 0) - Number(balance.closingBalance || 0);
-  const foodRatePerDay = totalAttendance > 0 ? netFoodAmount / totalAttendance : 0;
-  const staffRatePerStudent = totalStudents > 0 ? staffExpenses / totalStudents : 0;
+  const netFoodAmount =
+    foodExpenses +
+    Number(balance.prevBalance || 0) -
+    Number(balance.closingBalance || 0);
+  const foodRatePerDay =
+    totalAttendance > 0 ? netFoodAmount / totalAttendance : 0;
+  const staffRatePerStudent =
+    totalStudents > 0 ? staffExpenses / totalStudents : 0;
 
   // ─── SEND DRAFT ────────────────────────────────────────────
   async function sendDraft() {
@@ -137,13 +277,16 @@ export default function MessBill() {
     // Closing balance must not exceed total monthly expenses
     const closingBal = Number(balance.closingBalance || 0);
     if (closingBal > foodExpenses) {
-      showToast(`Closing balance (₹${closingBal.toFixed(2)}) exceeds food expenses (₹${foodExpenses.toFixed(2)}). Update it in Expenses page first.`, "warning");
+      showToast(
+        `Closing balance (₹${closingBal.toFixed(2)}) exceeds food expenses (₹${foodExpenses.toFixed(2)}). Update it in Expenses page first.`,
+        "warning",
+      );
       return;
     }
 
     // ── CONFIRM ───────────────────────────────────────────
     const confirm = window.confirm(
-      `Send draft bill for ${selectedMonth} to students?\n\nStudents will be able to view their estimated bill. You can still edit expenses until you publish.`
+      `Send draft bill for ${selectedMonth} to students?\n\nStudents will be able to view their estimated bill. You can still edit expenses until you publish.`,
     );
     if (!confirm) return;
 
@@ -169,12 +312,16 @@ export default function MessBill() {
   // ─── PUBLISH BILL ──────────────────────────────────────────
   async function publishBill() {
     // Can only publish previous month's bill, not current month
-    const currentMonthStr = `${nowY}-${String(nowM).padStart(2,"0")}`;
+    const currentMonthStr = `${nowY}-${String(nowM).padStart(2, "0")}`;
     if (selectedMonth === currentMonthStr) {
-      showToast(`Cannot publish ${MONTHS[nowM - 1]} ${nowY} bill yet — wait until the month ends.`, "warning"); return;
+      showToast(
+        `Cannot publish ${MONTHS[nowM - 1]} ${nowY} bill yet — wait until the month ends.`,
+        "warning",
+      );
+      return;
     }
     const confirm = window.confirm(
-      `Publish final mess bill for ${selectedMonth}?\n\n⚠️ Once published:\n• Expenses for this month will be frozen\n• Attendance for this month will be frozen\n• This cannot be undone`
+      `Publish final mess bill for ${selectedMonth}?\n\n⚠️ Once published:\n• Expenses for this month will be frozen\n• Attendance for this month will be frozen\n• This cannot be undone`,
     );
     if (!confirm) return;
 
@@ -197,11 +344,20 @@ export default function MessBill() {
     }
   }
 
-
   // ─── PERIOD PICKER — current month, prev month, current year only ───
   const MONTHS = [
-    "January","February","March","April","May","June",
-    "July","August","September","October","November","December"
+    "January",
+    "February",
+    "March",
+    "April",
+    "May",
+    "June",
+    "July",
+    "August",
+    "September",
+    "October",
+    "November",
+    "December",
   ];
   const nowM = new Date().getMonth() + 1;
   const nowY = new Date().getFullYear();
@@ -209,109 +365,201 @@ export default function MessBill() {
   const prevY = nowM === 1 ? nowY - 1 : nowY;
 
   const PERIOD_OPTIONS = [
-    { label: `${MONTHS[prevM - 1]} ${prevY}`, value: `${prevY}-${String(prevM).padStart(2,"0")}` },
-    { label: `${MONTHS[nowM - 1]} ${nowY}`,   value: `${nowY}-${String(nowM).padStart(2,"0")}` },
+    {
+      label: `${MONTHS[prevM - 1]} ${prevY}`,
+      value: `${prevY}-${String(prevM).padStart(2, "0")}`,
+    },
+    {
+      label: `${MONTHS[nowM - 1]} ${nowY}`,
+      value: `${nowY}-${String(nowM).padStart(2, "0")}`,
+    },
   ];
 
   return (
     <Layout>
       <div className="expenses-container" style={{ paddingBottom: "80px" }}>
-
         {/* HEADER ROW */}
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "16px", flexWrap: "wrap", gap: "10px" }}>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            marginBottom: "16px",
+            flexWrap: "wrap",
+            gap: "10px",
+          }}
+        >
           <h2 style={{ margin: 0 }}>Mess Bill</h2>
 
           <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
             {/* Status badges */}
             {isDrafted && !isPublished && (
-              <div style={{
-                background: "#fef9c3", color: "#854d0e",
-                border: "1px solid #fde047", borderRadius: "8px",
-                padding: "6px 12px", fontSize: "12px", fontWeight: "600",
-              }}>
-                📋 Draft sent {draftedAt ? `on ${new Date(draftedAt).toLocaleDateString()}` : ""}
+              <div
+                style={{
+                  background: "#fef9c3",
+                  color: "#854d0e",
+                  border: "1px solid #fde047",
+                  borderRadius: "8px",
+                  padding: "6px 12px",
+                  fontSize: "12px",
+                  fontWeight: "600",
+                }}
+              >
+                📋 Draft sent{" "}
+                {draftedAt
+                  ? `on ${new Date(draftedAt).toLocaleDateString()}`
+                  : ""}
               </div>
             )}
             {isPublished && (
-              <div style={{
-                background: "#dcfce7", color: "#16a34a",
-                border: "1px solid #86efac", borderRadius: "8px",
-                padding: "6px 12px", fontSize: "12px", fontWeight: "600",
-              }}>
-                ✓ Published {publishedAt ? `on ${new Date(publishedAt).toLocaleDateString()}` : ""}
+              <div
+                style={{
+                  background: "#dcfce7",
+                  color: "#16a34a",
+                  border: "1px solid #86efac",
+                  borderRadius: "8px",
+                  padding: "6px 12px",
+                  fontSize: "12px",
+                  fontWeight: "600",
+                }}
+              >
+                ✓ Published{" "}
+                {publishedAt
+                  ? `on ${new Date(publishedAt).toLocaleDateString()}`
+                  : ""}
               </div>
             )}
 
             {/* Action button */}
             {!isPublished && !isDrafted && (
-              <button onClick={sendDraft} disabled={actionLoading || loading} style={btnStyle("#3b82f6", "#2563eb")}>
+              <button
+                onClick={sendDraft}
+                disabled={actionLoading || loading}
+                style={btnStyle("#3b82f6", "#2563eb")}
+              >
                 {actionLoading ? "Sending..." : "📋 Send Draft"}
               </button>
             )}
-            {isDrafted && !isPublished && (() => {
-              const currentMonthStr = `${nowY}-${String(nowM).padStart(2,"0")}`;
-              const isCurrentMonth = selectedMonth === currentMonthStr;
-              return (
-                <button
-                  onClick={publishBill}
-                  disabled={actionLoading || loading || isCurrentMonth}
-                  title={isCurrentMonth ? `Cannot publish current month's bill` : ""}
-                  style={{
-                    ...btnStyle("#f59e0b", "#d97706"),
-                    opacity: isCurrentMonth ? 0.45 : 1,
-                    cursor: isCurrentMonth ? "not-allowed" : "pointer",
-                  }}
-                >
-                  {actionLoading ? "Publishing..." : "📢 Publish Bill"}
-                </button>
-              );
-            })()}
+            {isDrafted &&
+              !isPublished &&
+              (() => {
+                const currentMonthStr = `${nowY}-${String(nowM).padStart(2, "0")}`;
+                const isCurrentMonth = selectedMonth === currentMonthStr;
+                return (
+                  <button
+                    onClick={publishBill}
+                    disabled={actionLoading || loading || isCurrentMonth}
+                    title={
+                      isCurrentMonth
+                        ? `Cannot publish current month's bill`
+                        : ""
+                    }
+                    style={{
+                      ...btnStyle("#f59e0b", "#d97706"),
+                      opacity: isCurrentMonth ? 0.45 : 1,
+                      cursor: isCurrentMonth ? "not-allowed" : "pointer",
+                    }}
+                  >
+                    {actionLoading ? "Publishing..." : "📢 Publish Bill"}
+                  </button>
+                );
+              })()}
           </div>
         </div>
 
         {/* Period picker — prev month and current month only */}
-        <div style={{ marginBottom: "15px", display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap" }}>
-          <label><b>Month :</b></label>
-          <select
-            className="select-modern"
-            value={selectedMonth}
-            onChange={(e) => setSelectedMonth(e.target.value)}
+        <div
+          style={{
+            marginBottom: "15px",
+            display: "flex",
+            alignItems: "center",
+            gap: "10px",
+            flexWrap: "wrap",
+          }}
+        >
+          <label>
+            <b>Month :</b>
+          </label>
+          <div
+            style={{
+              marginBottom: "15px",
+              display: "flex",
+              alignItems: "center",
+              gap: "10px",
+              flexWrap: "wrap",
+            }}
           >
-            {PERIOD_OPTIONS.map((opt) => (
-              <option key={opt.value} value={opt.value}>{opt.label}</option>
-            ))}
-          </select>
+            <label>
+              <b>Month :</b>
+            </label>
+            <ModernSelect
+              value={selectedMonth}
+              onChange={(e) => setSelectedMonth(e.target.value)}
+              options={PERIOD_OPTIONS}
+              style={{ minWidth: "160px" }}
+            />
+          </div>
         </div>
 
         {/* Info — current month cannot be published */}
         {(() => {
-          const currentMonthStr = `${nowY}-${String(nowM).padStart(2,"0")}`;
-          return selectedMonth === currentMonthStr && isDrafted && !isPublished ? (
-            <div style={{
-              background: "#eff6ff", border: "1px solid #bfdbfe",
-              color: "#1e40af", padding: "10px 16px", borderRadius: "8px",
-              marginBottom: "14px", fontSize: "13px",
-            }}>
-              ℹ️ <b>{MONTHS[nowM - 1]} {nowY}</b> bill cannot be published until the month ends. Switch to <b>{MONTHS[prevM - 1]} {prevY}</b> to publish.
+          const currentMonthStr = `${nowY}-${String(nowM).padStart(2, "0")}`;
+          return selectedMonth === currentMonthStr &&
+            isDrafted &&
+            !isPublished ? (
+            <div
+              style={{
+                background: "#eff6ff",
+                border: "1px solid #bfdbfe",
+                color: "#1e40af",
+                padding: "10px 16px",
+                borderRadius: "8px",
+                marginBottom: "14px",
+                fontSize: "13px",
+              }}
+            >
+              ℹ️{" "}
+              <b>
+                {MONTHS[nowM - 1]} {nowY}
+              </b>{" "}
+              bill cannot be published until the month ends. Switch to{" "}
+              <b>
+                {MONTHS[prevM - 1]} {prevY}
+              </b>{" "}
+              to publish.
             </div>
           ) : null;
         })()}
 
         {/* TOAST */}
-      {toast && <AlertToast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
+        {toast && (
+          <AlertToast
+            message={toast.message}
+            type={toast.type}
+            onClose={() => setToast(null)}
+          />
+        )}
 
-      {error && (
-          <div style={{
-            color: "#dc2626", background: "#fee2e2",
-            padding: "10px 14px", borderRadius: "8px",
-            marginBottom: "14px", fontSize: "13px",
-          }}>
+        {error && (
+          <div
+            style={{
+              color: "#dc2626",
+              background: "#fee2e2",
+              padding: "10px 14px",
+              borderRadius: "8px",
+              marginBottom: "14px",
+              fontSize: "13px",
+            }}
+          >
             ⚠️ {error}
           </div>
         )}
 
         {/* Student bill table */}
-        <div className="table-responsive" style={{ maxHeight: "calc(100vh - 280px)", overflowY: "auto" }}>
+        <div
+          className="table-responsive"
+          style={{ maxHeight: "calc(100vh - 280px)", overflowY: "auto" }}
+        >
           <table className="expense-table">
             <thead>
               <tr>
@@ -325,9 +573,23 @@ export default function MessBill() {
             </thead>
             <tbody>
               {loading ? (
-                <tr><td colSpan="6" style={{ textAlign: "center", padding: "20px" }}>Loading...</td></tr>
+                <tr>
+                  <td
+                    colSpan="6"
+                    style={{ textAlign: "center", padding: "20px" }}
+                  >
+                    Loading...
+                  </td>
+                </tr>
               ) : allStudents.length === 0 ? (
-                <tr><td colSpan="6" style={{ textAlign: "center", padding: "20px" }}>No students found.</td></tr>
+                <tr>
+                  <td
+                    colSpan="6"
+                    style={{ textAlign: "center", padding: "20px" }}
+                  >
+                    No students found.
+                  </td>
+                </tr>
               ) : (
                 allStudents.map((student) => {
                   const days = calculateAttendance(student);
@@ -340,7 +602,9 @@ export default function MessBill() {
                       <td>{days}</td>
                       <td>₹{foodBill.toFixed(2)}</td>
                       <td>₹{staffRatePerStudent.toFixed(2)}</td>
-                      <td><b>₹{totalBill.toFixed(2)}</b></td>
+                      <td>
+                        <b>₹{totalBill.toFixed(2)}</b>
+                      </td>
                     </tr>
                   );
                 })
@@ -354,13 +618,15 @@ export default function MessBill() {
 
       {/* FIXED SUMMARY BAR — same style as Expenses page */}
       <div className="summary-card">
-        {[0, 1].map(i => (
+        {[0, 1].map((i) => (
           <div key={i} className="summary-card-track">
             <div>Food: ₹{foodExpenses.toFixed(2)}</div>
             <div>Staff: ₹{staffExpenses.toFixed(2)}</div>
             <div>Attendance: {totalAttendance} days</div>
             <div>Food Rate/Day: ₹{foodRatePerDay.toFixed(2)}</div>
-            <div className="final">Staff/Student: ₹{staffRatePerStudent.toFixed(2)}</div>
+            <div >
+              Staff salary/Student: ₹{staffRatePerStudent.toFixed(2)}
+            </div>
           </div>
         ))}
       </div>

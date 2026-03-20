@@ -1,9 +1,80 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import Layout from "../../components/Layout";
 import AlertToast from "../../components/Alerttoast";
 
 //const API = "http://localhost:5000";
 const API = "https://mess-management-system-q6us.onrender.com";
+
+const ModernSelect = ({ value, onChange, options, style, disabled }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const containerRef = useRef(null);
+
+  useEffect(() => {
+    const handleOutsideClick = (e) => {
+      if (containerRef.current && !containerRef.current.contains(e.target)) {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleOutsideClick);
+    return () => document.removeEventListener("mousedown", handleOutsideClick);
+  }, []);
+
+  const selectedOpt = options.find((o) => String(o.value) === String(value)) || options[0];
+
+  return (
+    <div ref={containerRef} style={{ ...style, position: "relative", display: "inline-block" }}>
+      <div
+        onClick={() => !disabled && setIsOpen(!isOpen)}
+        style={{
+          padding: "8px 14px", paddingRight: "32px", borderRadius: "8px",
+          border: isOpen ? "1px solid #3b82f6" : "1px solid #e2e8f0",
+          backgroundColor: disabled ? "#f1f5f9" : "#ffffff",
+          color: disabled ? "#94a3b8" : "#334155",
+          fontSize: "13px", fontWeight: "600",
+          cursor: disabled ? "not-allowed" : "pointer",
+          userSelect: "none",
+          boxShadow: isOpen ? "0 0 0 3px rgba(59, 130, 246, 0.1)" : "0 1px 2px rgba(0,0,0,0.05)",
+          backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2364748b'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`,
+          backgroundRepeat: "no-repeat", backgroundPosition: "right 10px center", backgroundSize: "14px",
+          opacity: disabled ? 0.65 : 1, width: "100%", boxSizing: "border-box", minHeight: "36px",
+          display: "flex", alignItems: "center"
+        }}
+      >
+        <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+          {selectedOpt ? selectedOpt.label : "Select"}
+        </span>
+      </div>
+      {isOpen && !disabled && (
+        <div
+          style={{
+            position: "absolute", top: "calc(100% + 4px)", left: 0,
+            width: "100%", minWidth: "120px", maxHeight: "250px", overflowY: "auto",
+            backgroundColor: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "8px",
+            boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.1)",
+            zIndex: 9999, padding: "4px", boxSizing: "border-box"
+          }}
+        >
+          {options.map((opt) => (
+            <div
+              key={opt.value}
+              onClick={() => { onChange({ target: { value: opt.value } }); setIsOpen(false); }}
+              style={{
+                padding: "8px 12px", fontSize: "13px", fontWeight: "500",
+                color: String(opt.value) === String(value) ? "#1d4ed8" : "#334155",
+                backgroundColor: String(opt.value) === String(value) ? "#eff6ff" : "transparent",
+                borderRadius: "6px", cursor: "pointer", transition: "background-color 0.15s",
+              }}
+              onMouseEnter={(e) => { if (String(opt.value) !== String(value)) e.target.style.backgroundColor = "#f8fafc"; }}
+              onMouseLeave={(e) => { if (String(opt.value) !== String(value)) e.target.style.backgroundColor = "transparent"; }}
+            >
+              {opt.label}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
 
 const STAFF_CONFIG = {
   "Cook Salary":   { label: "Cook",   ratePerDay: 710, maxDays: (dim) => dim - 1 },
@@ -275,15 +346,24 @@ export default function Attendance() {
           <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
             <h2 style={{ margin: 0, fontSize: "20px", fontWeight: "700", color: "#0a1f5c" }}>Attendance</h2>
             <div style={{ display: "flex", gap: "6px", alignItems: "center" }}>
-              <select className="select-modern" value={pickerDay} onChange={(e) => handlePickerDay(Number(e.target.value))} style={{ width: "60px" }}>
-                {DAYS.map((d) => (<option key={d} value={d}>{String(d).padStart(2,"0")}</option>))}
-              </select>
-              <select className="select-modern" value={pickerMonth} onChange={(e) => handlePickerMonth(Number(e.target.value))} style={{ minWidth: "105px" }}>
-                {MONTH_OPTIONS.map(({ name, num }) => (<option key={num} value={num}>{name}</option>))}
-              </select>
-              <select className="select-modern" value={pickerYear} onChange={(e) => handlePickerYear(Number(e.target.value))} style={{ width: "76px" }}>
-                {YEAR_OPTIONS.map((yy) => (<option key={yy} value={yy}>{yy}</option>))}
-              </select>
+              <ModernSelect
+                value={pickerDay}
+                onChange={(e) => handlePickerDay(Number(e.target.value))}
+                options={DAYS.map((d) => ({ value: d, label: String(d).padStart(2,"0") }))}
+                style={{ width: "80px" }}
+              />
+              <ModernSelect
+                value={pickerMonth}
+                onChange={(e) => handlePickerMonth(Number(e.target.value))}
+                options={MONTH_OPTIONS.map(({ name, num }) => ({ value: num, label: name }))}
+                style={{ width: "130px" }}
+              />
+              <ModernSelect
+                value={pickerYear}
+                onChange={(e) => handlePickerYear(Number(e.target.value))}
+                options={YEAR_OPTIONS.map((yy) => ({ value: yy, label: yy }))}
+                style={{ width: "96px" }}
+              />
             </div>
           </div>
           <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
