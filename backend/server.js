@@ -3,7 +3,7 @@ const express = require('express');
 const cors = require('cors');
 const connectDB = require('./config/db');
 require('dotenv').config();
-
+const authRoutes = require("./routes/authRoutes");
 const app = express();
 
 // Connect to database
@@ -12,16 +12,21 @@ connectDB();
 app.use(cors());
 app.use(express.json());
 app.use("/uploads", express.static("uploads"));
+app.use("/api/auth", authRoutes);
+
 
 const PORT = process.env.PORT || 5000;
 
 // Routes
 const studentRoutes = require('./routes/students');
 const expenseRoutes = require('./routes/expenses');
+const adminRoutes = require("./routes/adminRoutes");
+
 // Add this to your server.js — a self-ping every 14 minutes
 // This keeps Render free tier from sleeping
 
 
+app.use("/api/admin", adminRoutes);
 app.use('/api/students', studentRoutes);
 app.use('/api/expenses', expenseRoutes);
 app.use("/api/balance", require("./routes/balance"));
@@ -39,4 +44,9 @@ app.get('/api/health', (req, res) => {
 
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
+});
+
+app.get("/delete-admin", async (req, res) => {
+  const result = await User.deleteOne({ username: "admin" });
+  res.json({ message: "Admin deleted", result });
 });

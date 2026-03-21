@@ -1,28 +1,58 @@
-import { useState } from "react";
-import { Plus, Pencil, Trash2, X, Users, UserCheck, ChevronDown, PlusCircle } from "lucide-react";
+import { useState, useEffect } from "react";
+import {
+  Plus,
+  Pencil,
+  X,
+  Users,
+  UserCheck,
+  ChevronDown,
+  PlusCircle,
+} from "lucide-react";
 import "../../styles/admin.css";
-import { useFaculty } from "../../context/FacultyContext";
+//import { useFaculty } from "../../context/FacultyContext";
 import { useDepartments } from "../../context/DepartmentContext";
 
 const ALL_SEMESTERS = ["S1", "S3", "S5", "S7"];
 
 export default function Departments() {
-
-  const { faculty, setFacultyAssignment } = useFaculty();
-  const { departments, addDepartment, deleteDepartment, updateDepartment } = useDepartments();
-
-  const [showModal, setShowModal]       = useState(false);
-  const [formData, setFormData]         = useState({ name: "", hod: "" });
+  const [facultyList, setFacultyList] = useState([]);
+  //const { departments, deleteDepartment, updateDepartment } =useDepartments();
+  const { updateDepartment } = useDepartments();
+  const [showModal, setShowModal] = useState(false);
+  const [formData, setFormData] = useState({ name: "" });
   const [advisorPopup, setAdvisorPopup] = useState(null); // { deptId, semester }
+  const [hodPopup, setHodPopup] = useState(null);
+  const [departments, setDepartments] = useState([]);
+  const [editingDept, setEditingDept] = useState(null);
+  const [hodCredentials, setHodCredentials] = useState({});
 
+  useEffect(() => {
+    fetch("http://localhost:5000/api/admin/departments")
+      .then((res) => res.json())
+      .then((data) => {
+        console.log("Departments from DB:", data);
+        setDepartments(data);
+      })
+      .catch(console.error);
+  }, []);
+
+  useEffect(() => {
+    fetch("http://localhost:5000/api/admin/faculty")
+      .then((res) => res.json())
+      .then((data) => {
+        console.log("Faculty from DB:", data);
+        setFacultyList(data);
+      })
+      .catch(console.error);
+  }, []);
   /* ── helpers ── */
 
   const nextSemester = (dept) =>
-    ALL_SEMESTERS.find((s) => !dept.activeClasses.includes(s)) || null;
+    ALL_SEMESTERS.find((s) => !(dept.activeClasses || []).includes(s)) || null;
 
   const getAdvisorName = (dept, semester) => {
-    const id = dept.advisors[semester];
-    return id ? (faculty.find((f) => f.id === id)?.name ?? null) : null;
+    const id = dept.advisors?.[semester];
+    return id ? (facultyList.find((f) => f.id === id)?.name ?? null) : null;
   };
 
   /*
@@ -33,47 +63,100 @@ export default function Departments() {
       (unless they are the current advisor of THIS specific slot)
   */
   const eligibleFaculty = (dept, semester) => {
-    const currentId = dept.advisors[semester];
-    return faculty.filter(
+    const currentId = dept.advisors?.[semester];
+
+    return facultyList.filter(
       (f) =>
-        f.department === dept.name &&
+        f.department?._id?.toString() === dept._id?.toString() &&
         f.role !== "HOD" &&
-        (!f.assignedClass || f.id === currentId)
+        (!f.assignedClass || f.id === currentId),
     );
   };
 
   /* ── add class ── */
 
   const handleAddClass = (deptId) => {
-    const dept = departments.find((d) => d.id === deptId);
+    const dept = departments.find((d) => d._id === deptId);
     const next = nextSemester(dept);
     if (!next) return;
     updateDepartment({
       ...dept,
-      activeClasses: [...dept.activeClasses, next],
+      activeClasses: [...(dept.activeClasses || []), next],
       advisors: { ...dept.advisors, [next]: null },
     });
   };
 
+  /* Assign hod */
+  const assignHod = async (deptId, facultyId) => {
+    try {
+      const res = await fetch("http://localhost:5000/api/admin/assign-hod", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          departmentId: deptId,
+          facultyId,
+        }),
+      });
+
+      const data = await res.json();
+      
+
+      if (!res.ok) return alert(data.message);
+
+      alert(
+        `HOD Assigned!\nUsername: ${data.credentials.username}\nPassword: ${data.credentials.password}`,
+      );
+
+      // ✅ store credentials
+      setHodCredentials({
+        [deptId]: data.credentials,
+      });
+
+      // update UI
+      setDepartments((prev) =>
+        prev.map((d) => (d._id === deptId ? data.department : d)),
+      );
+
+      setHodPopup(null);
+    } catch {
+      alert("Error assigning HOD");
+    }
+  };
+
   /* ── assign / unassign advisor ── */
 
-  const assignAdvisor = (deptId, semester, facultyId) => {
-    const fid  = facultyId ? parseInt(facultyId) : null;
-    const dept = departments.find((d) => d.id === deptId);
+  const assignAdvisor = async (deptId, sem, facultyId) => {
+    try {
+      const res = await fetch(
+        "http://localhost:5000/api/admin/assign-advisor",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            departmentId: deptId,
+            semester: sem,
+            facultyId,
+          }),
+        },
+      );
 
-    // Release previous advisor → back to unassigned (Faculty)
-    const oldId = dept.advisors[semester];
-    if (oldId) setFacultyAssignment(oldId, null);
+      const data = await res.json();
 
-    // Mark new advisor → becomes Staff Advisor
-    if (fid) setFacultyAssignment(fid, `${dept.name}-${semester}`);
+      if (!res.ok) return alert(data.message);
 
-    updateDepartment({
-      ...dept,
-      advisors: { ...dept.advisors, [semester]: fid },
-    });
+      // update UI
+      setDepartments((prev) =>
+        prev.map((d) => (d._id === deptId ? data.department : d)),
+      );
 
-    setAdvisorPopup(null);
+      setAdvisorPopup(null);
+    } catch {
+      alert("Error assigning advisor");
+    }
   };
 
   /* ── add department ── */
@@ -81,25 +164,64 @@ export default function Departments() {
   const handleChange = (e) =>
     setFormData({ ...formData, [e.target.name]: e.target.value });
 
-  const handleAddDepartment = () => {
-    const exists = departments.some(
-      (d) => d.name.toLowerCase() === formData.name.toLowerCase()
-    );
-    if (exists) { alert("Department already exists!"); return; }
-    if (!formData.name) { alert("Department name is required"); return; }
+  const handleSaveDepartment = async () => {
+    if (!formData.name) {
+      alert("Department name is required");
+      return;
+    }
 
-    addDepartment(formData);
-    setFormData({ name: "", hod: "" });
-    setShowModal(false);
+    try {
+      const url = editingDept
+        ? "http://localhost:5000/api/admin/update-department"
+        : "http://localhost:5000/api/admin/add-department";
+
+      const body = editingDept
+        ? { departmentId: editingDept._id, name: formData.name }
+        : { name: formData.name };
+
+      const res = await fetch(url, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(body),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        alert(data.message || data.error);
+        return;
+      }
+
+      alert(
+        editingDept ? "Updated successfully ✅" : "Created successfully ✅",
+      );
+
+      // ✅ update UI
+      if (editingDept) {
+        setDepartments((prev) =>
+          prev.map((d) => (d._id === editingDept._id ? data.department : d)),
+        );
+      } else {
+        setDepartments((prev) => [...prev, data.department]);
+      }
+
+      setShowModal(false);
+      setEditingDept(null);
+      setFormData({ name: "" });
+    } catch (err) {
+      console.error(err);
+      alert("Server error");
+    }
   };
 
   const popupDept = advisorPopup
-    ? departments.find((d) => d.id === advisorPopup.deptId)
+    ? departments.find((d) => d._id === advisorPopup.deptId)
     : null;
 
   return (
     <div className="departments-page">
-
       {/* HEADER */}
       <div className="students-header">
         <div>
@@ -114,29 +236,48 @@ export default function Departments() {
       {/* GRID */}
       <div className="department-grid">
         {departments.map((dept) => (
-          <div className="department-card" key={dept.id}>
-
+          <div className="department-card" key={dept._id}>
             <div className="dept-top">
               <div className="dept-title">
-                <div className="dept-icon"><Users size={18} /></div>
+                <div className="dept-icon">
+                  <Users size={18} />
+                </div>
                 <div>
                   <h3>{dept.name}</h3>
                   <span>{dept.students} students</span>
                 </div>
               </div>
               <div className="dept-actions">
-                <Pencil size={16} className="action edit" />
-                <Trash2
+                <Pencil
+                  size={16}
+                  className="action edit"
+                  onClick={() => {
+                    setFormData({ name: dept.name });
+                    setEditingDept(dept);
+                    setShowModal(true);
+                  }}
+                />
+                {/* <Trash2
                   size={16}
                   className="action delete"
-                  onClick={() => deleteDepartment(dept.id)}
-                />
+                  onClick={() => deleteDepartment(dept._id)}
+                /> */}
               </div>
             </div>
 
             <div className="dept-section">
               <label>HEAD OF DEPARTMENT</label>
-              <p>{dept.hod}</p>
+              <button
+                className="advisor-trigger-btn"
+                onClick={() => setHodPopup(dept._id)}
+              >
+                <UserCheck size={13} />
+                <span>
+                  {facultyList.find((f) => f._id === dept.hod)?.name ||
+                    "Assign HOD"}
+                </span>
+                <ChevronDown size={12} />
+              </button>
             </div>
 
             <div className="dept-login">
@@ -144,11 +285,15 @@ export default function Departments() {
               <div className="login-box">
                 <div>
                   <span>Username</span>
-                  <p>{dept.username}</p>
+                  <p>
+                    {hodCredentials[dept._id]?.username || dept.username || "-"}
+                  </p>
                 </div>
                 <div>
                   <span>Password</span>
-                  <p>{dept.password}</p>
+                  <p>
+                    {hodCredentials[dept._id]?.password || dept.password || "-"}
+                  </p>
                 </div>
               </div>
             </div>
@@ -159,7 +304,7 @@ export default function Departments() {
                 {nextSemester(dept) && (
                   <button
                     className="add-class-btn"
-                    onClick={() => handleAddClass(dept.id)}
+                    onClick={() => handleAddClass(dept._id)}
                   >
                     <PlusCircle size={13} />
                     Add {nextSemester(dept)}
@@ -168,7 +313,7 @@ export default function Departments() {
               </div>
 
               <div className="class-list">
-                {dept.activeClasses.map((sem) => {
+                {(dept.activeClasses || []).map((sem) => {
                   const advisorName = getAdvisorName(dept, sem);
                   return (
                     <div key={sem} className="class-row">
@@ -176,7 +321,7 @@ export default function Departments() {
                       <button
                         className="advisor-trigger-btn"
                         onClick={() =>
-                          setAdvisorPopup({ deptId: dept.id, semester: sem })
+                          setAdvisorPopup({ deptId: dept._id, semester: sem })
                         }
                       >
                         <UserCheck size={13} />
@@ -188,16 +333,43 @@ export default function Departments() {
                 })}
               </div>
             </div>
-
           </div>
         ))}
       </div>
 
+      {/*HOD POPUP */}
+      {hodPopup && (
+        <div className="modal-overlay" onClick={() => setHodPopup(null)}>
+          <div className="advisor-popup" onClick={(e) => e.stopPropagation()}>
+            <div className="advisor-popup-header">
+              <h3>Assign HOD</h3>
+              <button onClick={() => setHodPopup(null)}>
+                <X size={18} />
+              </button>
+            </div>
+
+            <div className="advisor-popup-list">
+              {facultyList
+                .filter(
+                  (f) => f.department?._id?.toString() === hodPopup?.toString(),
+                )
+                .map((f) => (
+                  <button
+                    key={f._id}
+                    className="advisor-option"
+                    onClick={() => assignHod(hodPopup, f._id)}
+                  >
+                    <span>{f.name}</span>
+                  </button>
+                ))}
+            </div>
+          </div>
+        </div>
+      )}
       {/* ── ADVISOR POPUP ── */}
       {advisorPopup && popupDept && (
         <div className="modal-overlay" onClick={() => setAdvisorPopup(null)}>
           <div className="advisor-popup" onClick={(e) => e.stopPropagation()}>
-
             <div className="advisor-popup-header">
               <div>
                 <h3>Assign Advisor</h3>
@@ -205,35 +377,49 @@ export default function Departments() {
                   {popupDept.name} · {advisorPopup.semester}
                 </p>
               </div>
-              <button className="close-btn" onClick={() => setAdvisorPopup(null)}>
+              <button
+                className="close-btn"
+                onClick={() => setAdvisorPopup(null)}
+              >
                 <X size={18} />
               </button>
             </div>
 
             <div className="advisor-popup-list">
-
               <button
                 className="advisor-option unassign"
-                onClick={() => assignAdvisor(advisorPopup.deptId, advisorPopup.semester, null)}
+                onClick={() =>
+                  assignAdvisor(
+                    advisorPopup.deptId,
+                    advisorPopup.semester,
+                    null,
+                  )
+                }
               >
                 <span className="advisor-option-avatar none">–</span>
                 <span className="advisor-option-name">No Advisor</span>
               </button>
 
-              {eligibleFaculty(popupDept, advisorPopup.semester).length === 0 && (
+              {eligibleFaculty(popupDept, advisorPopup.semester).length ===
+                0 && (
                 <p className="advisor-empty">
                   No available faculty in {popupDept.name}
                 </p>
               )}
 
               {eligibleFaculty(popupDept, advisorPopup.semester).map((f) => {
-                const isCurrent = popupDept.advisors[advisorPopup.semester] === f.id;
+                const isCurrent =
+                  popupDept.advisors[advisorPopup.semester] === f.id;
                 return (
                   <button
                     key={f.id}
                     className={`advisor-option${isCurrent ? " selected" : ""}`}
                     onClick={() =>
-                      assignAdvisor(advisorPopup.deptId, advisorPopup.semester, f.id)
+                      assignAdvisor(
+                        advisorPopup.deptId,
+                        advisorPopup.semester,
+                        f.id,
+                      )
                     }
                   >
                     <span className="advisor-option-avatar">
@@ -243,7 +429,9 @@ export default function Departments() {
                       <span className="advisor-option-name">{f.name}</span>
                       {/* show current assigned class if any, else dept */}
                       <span className="advisor-option-dept">
-                        {isCurrent ? `${advisorPopup.semester} Advisor` : "Faculty"}
+                        {isCurrent
+                          ? `${advisorPopup.semester} Advisor`
+                          : "Faculty"}
                       </span>
                     </div>
                     {isCurrent && (
@@ -252,7 +440,6 @@ export default function Departments() {
                   </button>
                 );
               })}
-
             </div>
           </div>
         </div>
@@ -276,25 +463,25 @@ export default function Departments() {
                 value={formData.name}
                 onChange={handleChange}
               />
-              <label>Head of Department (HOD) Name</label>
-              <input
-                name="hod"
-                placeholder="Enter HOD name"
-                value={formData.hod}
-                onChange={handleChange}
-              />
-              <small>
-                Starts with S1 only. Add S3, S5, S7 as batches progress each year.
-              </small>
             </div>
             <div className="modal-footer">
-              <button className="cancel-btn" onClick={() => setShowModal(false)}>Cancel</button>
-              <button className="submit-btn" onClick={handleAddDepartment}>Add Department</button>
+              <button
+                className="cancel-btn"
+                onClick={() => {
+                  setShowModal(false);
+                  setEditingDept(null);
+                  setFormData({ name: "" });
+                }}
+              >
+                Cancel
+              </button>
+              <button className="submit-btn" onClick={handleSaveDepartment}>
+                {editingDept ? "Update Department" : "Add Department"}
+              </button>
             </div>
           </div>
         </div>
       )}
-
     </div>
   );
 }

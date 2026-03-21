@@ -1,13 +1,16 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { C } from "../../utils/constants";
 
-export function Toast({ show }) {
+export function Toast({ show, setShow, message = "Payment successful!" }) {
+  useEffect(() => {
+    if (show) {
+      const t = setTimeout(() => setShow(false), 3000);
+      return () => clearTimeout(t);
+    }
+  }, [show, setShow]);
   return (
-    <div style={{ position:"fixed", bottom:24, left:"50%", transform:`translateX(-50%) translateY(${show?0:80}px)`, background:C.white, border:`1.5px solid ${C.greenBorder}`, borderRadius:12, padding:"12px 20px", zIndex:400, transition:"transform .4s cubic-bezier(.4,0,.2,1)", display:"flex", alignItems:"center", gap:10, boxShadow:"0 8px 24px rgba(0,0,0,.1)", whiteSpace:"nowrap", maxWidth:"90vw" }}>
-      <svg width="18" height="18" fill="none" stroke={C.green} strokeWidth="2.5" viewBox="0 0 24 24">
-        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>
-      </svg>
-      <span style={{ fontSize:13, fontWeight:700, color:C.green }}>Payment successful! Receipt sent to your email.</span>
+    <div style={{ position:"fixed", bottom:30, left:"50%", transform:`translate(-50%, ${show?0:20}px)`, opacity:show?1:0, pointerEvents:show?"all":"none", background:C.text, color:"#fff", padding:"12px 20px", borderRadius:12, fontSize:13.5, fontWeight:600, display:"flex", alignItems:"center", gap:8, boxShadow:"0 10px 30px rgba(0,0,0,.15)", transition:"all .3s cubic-bezier(.4,0,.2,1)", zIndex:400 }}>
+      {message}
     </div>
   );
 }

@@ -31,7 +31,6 @@ export function HostelSection() {
     messcut: vals.filter(v => v === "messcut").length,
     absent:  vals.filter(v => v === "absent").length,
     "absent-messcut": vals.filter(v => v === "absent-messcut").length,
-    leave:   vals.filter(v => v === "leave").length,
   };
   const pct = Math.round(counts.present / days * 100);
 
@@ -39,11 +38,10 @@ export function HostelSection() {
 
   const attStats = [
     { label:"Present",        val:counts.present,          color:C.green },
-    { label:"Mess Cut",       val:counts.messcut,           color:C.accent },
-    { label:"Absent",         val:counts.absent,            color:C.red },
-    { label:"Absent+Mess Cut",val:counts["absent-messcut"], color:"#be123c" },
-    { label:"Leave",          val:counts.leave,             color:C.gold },
-    { label:"Attendance %",   val:`${pct}%`,                color:C.accent2 },
+    { label:"Present Mess Cut",val:counts.messcut,         color:C.gold },
+    { label:"Absent",         val:counts.absent,           color:C.red },
+    { label:"Absent Mess Cut",val:counts["absent-messcut"], color:C.orange },
+    { label:"Attendance %",   val:`${pct}%`,               color:C.accent2 },
   ];
 
   return (
@@ -68,7 +66,7 @@ export function HostelSection() {
         ))}
       </div>
 
-      <div style={{ background:C.white, border:`1.5px solid ${C.border}`, borderRadius:14, padding:isMobile?16:22, boxShadow:shadow }}>
+      <div style={{ background:C.white, border:`1.5px solid ${C.border}`, borderRadius:14, padding:isMobile?10:14, boxShadow:shadow, margin:"0 auto", width:isMobile?"100%":"50%" }}>
         <div style={{ display:"grid", gridTemplateColumns:"repeat(7,1fr)", gap:isMobile?3:5, marginBottom:6 }}>
           {["Sun","Mon","Tue","Wed","Thu","Fri","Sat"].map(d => (
             <div key={d} style={{ textAlign:"center", fontSize:isMobile?10:11, fontWeight:700, color:C.muted, padding:4, textTransform:"uppercase" }}>{d}</div>

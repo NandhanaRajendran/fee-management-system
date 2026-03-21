@@ -9,58 +9,57 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
 
-  function handleLogin(e) {
-    e.preventDefault();
+  async function handleLogin(e) {
+  e.preventDefault();
 
-    if (username === "mess-sec" && password === "1234") {
-      localStorage.setItem("role", "mess");
-      navigate("/mess/dashboard");
+  try {
+    console.log("Sending login request...");
+    const res = await fetch("http://localhost:5000/api/auth/login", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ username, password })
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      setError(data.message || "Login failed");
+      return;
     }
 
-    else if (username === "admin" && password === "1234") {
-      localStorage.setItem("role", "admin");
-      navigate("/admin/dashboard");
+    // ✅ Save login info
+    localStorage.setItem("profile", JSON.stringify(data.user.profile));
+    localStorage.setItem("username", data.user.username);
+    localStorage.setItem("role", data.user.role);
+    localStorage.setItem("token", data.token);
+
+    // 🔥 Redirect based on role
+    switch (data.user.role) {
+      case "admin":
+        navigate("/admin/dashboard");
+        break;
+      case "student":
+        navigate("/student/dashboard");
+        break;
+      case "hod":
+        navigate("/hod/dashboard");
+        break;
+      case "staffAdvisor":
+        navigate("/staffadvisor/dashboard");
+        break;
+      case "feeManager":
+        navigate("/fee/dashboard");
+        break;
+      default:
+        navigate("/");
     }
 
-    else if (username === "library" && password === "1234") {
-      localStorage.setItem("role", "library");
-      navigate("/library/students");
-    }
-
-    else if (username === "student" && password === "1234") {
-      localStorage.setItem("role", "student");
-      navigate("/student/dashboard");
-    }
-
-    else if (username === "principal" && password === "1234") {
-      localStorage.setItem("role", "principal");
-      navigate("/principal/dashboard");
-    }
-
-    else if (username === "hostel" && password === "1234") {
-      localStorage.setItem("role", "hostel");
-      navigate("/hostel/dashboard");
-    }
-
-    else if (username === "hod" && password === "1234") {
-      localStorage.setItem("role", "hod");
-      navigate("/hod/dashboard");
-    }
-
-    else if (username === "staffadvisor" && password === "1234") {
-      localStorage.setItem("role", "staffadvisor");
-      navigate("/staffadvisor/dashboard");
-    }
-
-    else if (username === "pta" && password === "1234") {
-      localStorage.setItem("role", "pta");
-      navigate("/pta/dashboard");
-    }
-
-    else {
-      setError("Invalid username or password");
-    }
+  } catch (err) {
+    setError("Server error");
   }
+}
 
   return (
     <div className="login">

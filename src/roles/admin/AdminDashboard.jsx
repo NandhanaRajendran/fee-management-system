@@ -16,7 +16,7 @@ export default function AdminDashboard() {
     { name: "Add Department", icon: Plus, link: "/admin/departments", color: "purple" },
     { name: "Create Fee Section", icon: Plus, link: "/admin/fee-sections", color: "orange" },
   ];
-
+ 
   return (
     <div className="admin-container">
 

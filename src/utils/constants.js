@@ -15,16 +15,15 @@ export const shadowMd = `0 4px 16px rgba(37,99,235,.13), 0 1px 4px rgba(0,0,0,.0
 
 export const HOSTEL_SEQ = [
   "present", "present", "messcut", "absent", "absent-messcut",
-  "present", "leave",   "present", "messcut","present",
+  "present", "absent",   "present", "messcut","present",
   "present", "absent",  "present", "present","messcut",
 ];
 
 export const HOSTEL_STATUS_CFG = {
   present:        { label: "Present",        bg: "#f0fdf4", color: "#16a34a", border: "#bbf7d0", dot: "#16a34a" },
-  messcut:        { label: "Mess Cut",        bg: "#eff6ff", color: "#2563eb", border: "#bfdbfe", dot: "#2563eb" },
   absent:         { label: "Absent",          bg: "#fef2f2", color: "#dc2626", border: "#fecaca", dot: "#dc2626" },
-  "absent-messcut":{ label: "Absent+Mess Cut",bg: "#fff1f2", color: "#be123c", border: "#fecdd3", dot: "#be123c" },
-  leave:          { label: "Leave",           bg: "#fffbeb", color: "#d97706", border: "#fde68a", dot: "#d97706" },
+  messcut:        { label: "Present Mess Cut", bg: "#fef9c3", color: "#dbe51f", border: "#fde047", dot: "#ca8a04" },
+  "absent-messcut":{ label: "Absent Mess Cut", bg: "#ffedd5", color: "#ea580c", border: "#fed7aa", dot: "#ea580c" },
 };
 
 export const INITIAL_FEES = [
