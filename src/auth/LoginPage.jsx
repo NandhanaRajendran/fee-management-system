@@ -84,7 +84,7 @@ export default function LoginPage() {
           break;
         case "feeManager":
           const usernameLower = data.user.username.toLowerCase();
-          if (usernameLower === "messmanager") {
+          if (usernameLower.includes("mess")) {
             navigate("/mess/dashboard");
           } else if (usernameLower === "hostel") {
             navigate("/hostel/dashboard");
