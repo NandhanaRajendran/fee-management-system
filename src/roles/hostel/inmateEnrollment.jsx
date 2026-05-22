@@ -13,7 +13,7 @@ function Enrollment() {
   const [name, setName] = useState("");
   const [department, setDepartment] = useState("");
   const [semester, setSemester] = useState("");
-  const [gender,setGender] = useState("Female");
+  const [,setGender] = useState("Female");
   const [isAutoFilled, setIsAutoFilled] = useState(false);
 
   // Dropdown list states

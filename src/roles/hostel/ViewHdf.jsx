@@ -20,8 +20,7 @@ function PublishHDF() {
       .then(res => res.json())
       .then(data => {
         const studentArray = Array.isArray(data) ? data : [];
-        const monthIndex = months.indexOf(selectedMonth);
-        const targetYear = Number(selectedYear);
+        
 
 
 

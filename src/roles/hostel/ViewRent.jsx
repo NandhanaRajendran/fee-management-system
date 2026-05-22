@@ -30,8 +30,7 @@ function PublishRent() {
             s.HDF
           );
         });
-        const monthIndex = months.indexOf(selectedMonth);
-        const targetYear = Number(selectedYear);
+        
 
 
 
