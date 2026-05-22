@@ -2,9 +2,10 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Layout from "../../components/Layout";
 import AttendanceModal from "../../components/AttendanceModal";
+import API from "../../config/api";
 
 //const API = "http://localhost:8000";
-const API = "https://mess-management-system-q6us.onrender.com";
+// const API = "https://mess-management-system-q6us.onrender.com";
 
 const today        = new Date().toISOString().split("T")[0];
 const currentMonth = new Date().toISOString().slice(0, 7);
@@ -132,6 +133,7 @@ export default function Dashboard() {
             { label: "Attendance", path: "/mess/attendance", bg: "#f1f5ff", border: "#c7d2fe", color: "#3730a3" },
             { label: "Expenses",   path: "/mess/expenses",   bg: "#f0fdf4", border: "#86efac", color: "#166534" },
             { label: "Mess Bill",  path: "/mess/messbill",   bg: "#fffbeb", border: "#fcd34d", color: "#92400e" },
+            { label: "Due Sheet",  path: "/mess/duesheet",   bg: "#fef2f2", border: "#fca5a5", color: "#991b1b" },
           ].map(({ label, path, bg, border, color }) => (
             <button
               key={label}

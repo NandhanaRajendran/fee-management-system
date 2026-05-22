@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import "./manual.css";
 import { useNavigate } from "react-router-dom";
+import API from "../../config/api";
 
 function ManualRent() {
 
@@ -8,7 +9,7 @@ function ManualRent() {
 
   const [amount, setAmount] = useState("");
   const [selectedMonth, setSelectedMonth] = useState("June");
-  const API = "https://mess-management-system-q6us.onrender.com"
+  //const API = "https://mess-management-system-q6us.onrender.com"
   //const API = "http://localhost:8000"
 
   const handlePublish = async () => {
@@ -28,7 +29,11 @@ function ManualRent() {
       const response = await fetch(`${API}/api/students/rent`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ amount: numAmount })
+        body: JSON.stringify({
+          amount: numAmount,
+          month: selectedMonth,
+          year: new Date().getFullYear()
+        })
       });
       if (response.ok) {
         alert(`Rent for ${selectedMonth} is published`);

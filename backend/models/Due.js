@@ -17,7 +17,7 @@ const dueSchema = new mongoose.Schema({
     },
     status: {
         type: String,
-        enum: ["pending", "paid"],
+        enum: ["draft", "pending", "paid"],
         default: "pending"
     },
     dueDate: {           // ✅ add this
@@ -36,6 +36,14 @@ const dueSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: "Faculty",
         default: null
+    },
+    meta: {
+        type: Object,
+        default: {}
+    },
+    fineApplied: {
+        type: Boolean,
+        default: false
     },
 }, { timestamps: true });
 

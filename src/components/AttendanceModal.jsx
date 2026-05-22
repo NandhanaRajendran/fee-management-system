@@ -1,8 +1,9 @@
 import { useState, useEffect } from "react";
 import "../styles/mess.css";
+import API from "../config/api";
 
 //const API = "http://localhost:8000";
-const API = "https://mess-management-system-q6us.onrender.com"; // ← uncomment for production
+//const API = "https://mess-management-system-q6us.onrender.com"; // ← uncomment for production
 
 export default function AttendanceModal({ onClose }) {
   const currentYear  = new Date().getFullYear();
@@ -63,7 +64,7 @@ export default function AttendanceModal({ onClose }) {
     if (!day.present && !day.messCut) return "cell-yellow";
     return "cell-red"; // absent + cut
   };
-
+  
   // ─── Year options — current year and prev year ─────────────
   const YEAR_OPTIONS = [currentYear - 1, currentYear];
   const MONTH_NAMES  = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];

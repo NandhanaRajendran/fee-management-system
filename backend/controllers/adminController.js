@@ -10,7 +10,7 @@ const Due = require("../models/Due");
 exports.createStudent = async (req, res) => {
   try {
     const { name, admissionNo, department, className, batch, email, room, gender } = req.body;
-    
+
     if (!/^[a-zA-Z\s]+$/.test(name)) {
       return res.status(400).json({ message: "Student name must contain only characters and spaces. Numbers and special characters are not allowed." });
     }
@@ -56,7 +56,7 @@ exports.createStudent = async (req, res) => {
       gender,
     });
 
-   // Library dues code removed
+    // Library dues code removed
 
     try {
       // create user
@@ -68,7 +68,7 @@ exports.createStudent = async (req, res) => {
         refModel: "Student",
       });
 
-      
+
     } catch (err) {
       // rollback student if user fails
       await Student.findByIdAndDelete(student._id);
@@ -94,7 +94,7 @@ exports.createStudent = async (req, res) => {
 exports.updateStudent = async (req, res) => {
   try {
     const { name, admissionNo, department, className, batch, email, originalAdmissionNo, gender } = req.body;
-    
+
     if (name && !/^[a-zA-Z\s]+$/.test(name)) {
       return res.status(400).json({ message: "Student name must contain only characters and spaces." });
     }
@@ -105,13 +105,13 @@ exports.updateStudent = async (req, res) => {
     if (email) {
       const existingFaculty = await Faculty.findOne({ email });
       if (existingFaculty) {
-          return res.status(400).json({ message: "Email is already in use by a faculty member" });
+        return res.status(400).json({ message: "Email is already in use by a faculty member" });
       }
-      
+
       const adminNoToCheck = originalAdmissionNo || admissionNo;
       const existingStudentEmail = await Student.findOne({ email, admissionNo: { $ne: adminNoToCheck } });
       if (existingStudentEmail) {
-          return res.status(400).json({ message: "Email is already in use by another student" });
+        return res.status(400).json({ message: "Email is already in use by another student" });
       }
     }
 
@@ -123,10 +123,10 @@ exports.updateStudent = async (req, res) => {
     if (originalAdmissionNo && admissionNo !== originalAdmissionNo) {
       const existing = await Student.findOne({ admissionNo });
       if (existing) {
-         return res.status(400).json({ message: "New admission number already exists" });
+        return res.status(400).json({ message: "New admission number already exists" });
       }
       studentToUpdate.admissionNo = admissionNo;
-      
+
       const userToUpdate = await User.findOne({ username: originalAdmissionNo });
       if (userToUpdate) {
         userToUpdate.username = admissionNo;
@@ -142,7 +142,7 @@ exports.updateStudent = async (req, res) => {
     studentToUpdate.gender = gender || studentToUpdate.gender;
 
     await studentToUpdate.save();
-    
+
     // populate dept to send back properly structured object
     await studentToUpdate.populate("department", "name");
 
@@ -168,8 +168,9 @@ exports.clearDatabase = async (req, res) => {
 
 exports.addFaculty = async (req, res) => {
   try {
-    const { name, department, email, phone } = req.body;
 
+    console.log("Backend body:", req.body);
+    const { name, department, email, phone, facultyId, gender } = req.body;
     if (!/^[a-zA-Z\s]+$/.test(name)) {
       return res.status(400).json({ message: "Name must contain only characters and spaces" });
     }
@@ -202,20 +203,27 @@ exports.addFaculty = async (req, res) => {
       return res.status(404).json({ message: "Department not found" });
     }
 
-    const facultyId = "FAC" + Date.now().toString().slice(-5);
+    const finalFacultyId = facultyId || "FAC" + Date.now().toString().slice(-5);
+
+    // Check if facultyId already exists (important for custom ones)
+    const existingFacultyId = await Faculty.findOne({ facultyId: finalFacultyId });
+    if (existingFacultyId) {
+      return res.status(400).json({ message: "Faculty ID is already in use by another member" });
+    }
 
     const faculty = await Faculty.create({
       name,
-      facultyId,
+      facultyId: finalFacultyId,
       department: dept._id,
       email,
       phone,
+      gender: gender || "Other",
     });
 
     const password = generatePassword();
 
     await User.create({
-      username: facultyId,
+      username: finalFacultyId,
       password,
       role: "faculty",
       refId: faculty._id,
@@ -240,7 +248,7 @@ exports.addFaculty = async (req, res) => {
     res.status(201).json({
       message: "Faculty added successfully",
       credentials: {
-        username: facultyId,
+        username: finalFacultyId,
         password,
       },
     });
@@ -409,7 +417,7 @@ exports.assignAdvisor = async (req, res) => {
       .toLowerCase()
       .slice(0, 6);
 
-    const semShort = semester.toLowerCase(); 
+    const semShort = semester.toLowerCase();
     const username = `${semShort}_${deptShort}_adv`;
     const password = generatePassword();
 
@@ -591,14 +599,14 @@ exports.getHodDues = async (req, res) => {
 
     const query = hodFeeSection
       ? {
-          $or: [
-            { student: { $in: ownIds } },
-            {
-              feeSection: hodFeeSection._id,
-              addedByRef: refId  // ✅ now matches correctly
-            }
-          ]
-        }
+        $or: [
+          { student: { $in: ownIds } },
+          {
+            feeSection: hodFeeSection._id,
+            addedByRef: refId  // ✅ now matches correctly
+          }
+        ]
+      }
       : { student: { $in: ownIds } };
 
     const dues = await Due.find(query)
@@ -614,12 +622,22 @@ exports.getHodDues = async (req, res) => {
         populate: { path: "department", select: "name" }
       });
 
-    const result = dues.map((d) => ({
-      ...d.toObject(),
-      deptName: d.student?.department?.name || "Unknown",
-      addedByRef: d.addedByRef?._id?.toString(), // ✅ send as string to frontend
-      addedByDept: d.addedByRef?.department?.name || "N/A", // 🔥 add this
-    }));
+    const result = dues.map((d) => {
+      let chargedBy = "N/A";
+
+      if (d.addedByRef?.department?.name) {
+        chargedBy = d.addedByRef.department.name;
+      } else if (d.feeSection?.name) {
+        chargedBy = d.feeSection.name;
+      }
+
+      return {
+        ...d.toObject(),
+        deptName: d.student?.department?.name || "Unknown",
+        addedByRef: d.addedByRef?._id?.toString(),
+        addedByDept: chargedBy,
+      };
+    });
 
     res.json(result);
   } catch (err) {
@@ -665,10 +683,10 @@ exports.getHodDueSheet = async (req, res) => {
 
     // Fetch all fee sections and identify which should be grouped as "Fine"
     const allSections = await FeeSection.find({}).select("name");
-    
+
     const fineSectionNames = allSections.filter(s => {
-       const ln = s.name.toLowerCase();
-       return ln.includes("hod") || ln.includes("advisor") || ln.includes("library") || ln.includes("fine");
+      const ln = s.name.toLowerCase();
+      return ln.includes("hod") || ln.includes("advisor") || ln.includes("library") || ln.includes("fine");
     }).map(s => s.name);
 
     // Dynamic columns are everything else

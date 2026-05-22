@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Plus, Search, Trash2, X, ChevronDown, Check } from "lucide-react";
 import "../../styles/admin.css";
+import API from "../../config/api";
 
 export default function Staff() {
   const [faculty, setFaculty] = useState([]);
@@ -12,13 +13,15 @@ export default function Staff() {
 
   const [showModal, setShowModal] = useState(false);
   const [formData, setFormData] = useState({
+    facultyId: "",
     name: "",
     department: "",
     email: "",
     phone: "",
+    gender: "",
   });
 
-  const API = "https://mess-management-system-q6us.onrender.com"
+  //const API = "https://mess-management-system-q6us.onrender.com"
   //const API = "http://localhost:8000"
 
   const fetchFaculty = () => {
@@ -96,13 +99,17 @@ export default function Staff() {
   };
 
   // FORM
-  const handleChange = (e) =>
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
 
   // ADD FACULTY
   const handleAddFaculty = async () => {
-    if (!formData.name || !formData.department) {
-      alert("Name and Department are required");
+
+      console.log("Frontend gender:", formData.gender);
+    if (!formData.name || !formData.department || !formData.gender) {
+      alert("Name, Department, and Gender are required");
       return;
     }
 
@@ -118,10 +125,12 @@ export default function Staff() {
           Authorization: `Bearer ${sessionStorage.getItem("token")}`,
         },
         body: JSON.stringify({
+          facultyId: formData.facultyId,
           name: formData.name,
           department: selectedDept?._id,
           email: formData.email,
           phone: formData.phone,
+          gender: formData.gender,
         }),
       });
 
@@ -141,7 +150,7 @@ export default function Staff() {
   };
 
   const openModal = () => {
-    setFormData({ name: "", department: "", email: "", phone: "" });
+    setFormData({ facultyId: "", name: "", department: "", email: "", phone: "", gender: "" });
     setShowModal(true);
   };
 
@@ -197,7 +206,9 @@ export default function Staff() {
         <table className="students-table">
           <thead>
             <tr>
+              <th>Faculty ID</th>
               <th>NAME</th>
+              <th>GENDER</th>
               <th>ROLE</th>
               <th>DEPARTMENT</th>
               <th>CONTACT</th>
@@ -215,7 +226,9 @@ export default function Staff() {
             ) : (
               filteredFaculty.map((f) => (
                 <tr key={f._id}>
+                  <td>{f.facultyId || "N/A"}</td>
                   <td>{f.name}</td>
+                  <td>{f.gender ? f.gender.charAt(0).toUpperCase() + f.gender.slice(1) : "Other"}</td>
                   <td>{displayRole(f)}</td>
                   <td>{f.department?.name || f.department}</td>
                   <td>
@@ -270,6 +283,9 @@ export default function Staff() {
             </div>
 
             <div className="modal-body">
+              <label>Faculty ID</label>
+              <input name="facultyId" onChange={handleChange} />
+
               <label>Name</label>
               <input name="name" onChange={handleChange} />
 
@@ -292,6 +308,20 @@ export default function Staff() {
 
               <label>Phone</label>
               <input name="phone" onChange={handleChange} />
+
+              <label>Gender</label>
+              <select
+                name="gender"
+                value={formData.gender}
+                onChange={handleChange}
+                required
+                style={{ width: "100%", padding: "10px", borderRadius: "8px", border: "1px solid #e2e8f0", background: "white", marginTop: "5px" }}
+              >
+                <option value="">Select Gender</option>
+                <option value="Male">Male</option>
+                <option value="Female">Female</option>
+                <option value="Other">Other</option>
+              </select>
             </div>
 
             <div className="modal-footer">

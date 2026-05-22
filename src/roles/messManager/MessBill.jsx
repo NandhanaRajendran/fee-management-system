@@ -3,9 +3,9 @@ import Layout from "../../components/Layout";
 import AlertToast from "../../components/Alerttoast";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
-
+import API from "../../config/api";
+//const API = "https://mess-management-system-q6us.onrender.com";
 //const API = "http://localhost:8000";
-const API = "https://mess-management-system-q6us.onrender.com";
 
 // ─── MODERN SELECT (inline, no separate file) ──────────────
 function ModernSelect({ value, onChange, options, style, disabled }) {
@@ -112,16 +112,59 @@ export default function MessBill() {
 
     // ── CONFIRM ───────────────────────────────────────────
     const confirm = window.confirm(
-      `Send draft bill for ${selectedMonth} to students?\n\nStudents will be able to view their estimated bill. You can still edit expenses until you publish.`,
+      `${isDrafted ? "Resend" : "Send"} draft bill for ${selectedMonth} to students?\n\nStudents will be able to view their estimated bill. You can still edit expenses until you publish.`,
     );
     if (!confirm) return;
 
     setActionLoading(true);
     try {
+      const bills = allStudents
+        .filter(student =>
+          student.attendance?.some(r =>
+            r.date.startsWith(selectedMonth)
+          )
+        )
+        .map((student) => {
+
+          const days = calculateAttendance(student);
+
+          const foodBill = days * foodRatePerDay;
+
+          const milkDays =
+            student.attendance?.filter(
+              (r) =>
+                new Date(r.date)
+                  .toISOString()
+                  .startsWith(selectedMonth) &&
+                r.milk
+            ).length || 0;
+
+          const milkCharge = milkDays * 8;
+
+          const totalBill =
+            foodBill +
+            staffRatePerStudent +
+            milkCharge;
+          return {
+            studentId: student._id,
+            amount: Math.round(totalBill),
+
+            days,
+            foodBill: Math.round(foodBill),
+            staffShare: Math.round(staffRatePerStudent),
+            foodRatePerDay: Math.round(foodRatePerDay),
+
+            milkDays,
+            milkCharge
+          };
+        });
       const res = await fetch(`${API}/api/bill/draft`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ month: selectedMonth }),
+        body: JSON.stringify({
+          month: selectedMonth,
+          bills
+        }),
       });
       if (!res.ok) throw new Error("Failed to send draft");
       const data = await res.json();
@@ -153,10 +196,37 @@ export default function MessBill() {
 
     setActionLoading(true);
     try {
+      const bills = allStudents
+        .filter(student => student.attendance?.some(r => r.date.startsWith(selectedMonth)))
+        .map((student) => {
+          const days = calculateAttendance(student);
+          const foodBill = days * foodRatePerDay;
+
+          const milkDays =
+            student.attendance?.filter(
+              (r) =>
+                new Date(r.date)
+                  .toISOString()
+                  .startsWith(selectedMonth) &&
+                r.milk
+            ).length || 0;
+
+          const milkCharge = milkDays * 8;
+
+          const totalBill =
+            foodBill +
+            staffRatePerStudent +
+            milkCharge;
+          return {
+            studentId: student._id,
+            amount: Math.round(totalBill)
+          };
+        });
+
       const res = await fetch(`${API}/api/bill/publish`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ month: selectedMonth }),
+        body: JSON.stringify({ month: selectedMonth, bills }),
       });
       if (!res.ok) throw new Error("Failed to publish");
       const data = await res.json();
@@ -170,6 +240,81 @@ export default function MessBill() {
     }
   }
 
+  // async function unpublishBill() {
+  //   const confirm = window.confirm(
+  //     `Unpublish ${selectedMonth} bill?`
+  //   );
+
+  //   if (!confirm) return;
+
+  //   setActionLoading(true);
+
+  //   try {
+  //     const res = await fetch(`${API}/api/bill/unpublish`, {
+  //       method: "POST",
+  //       headers: {
+  //         "Content-Type": "application/json",
+  //       },
+  //       body: JSON.stringify({
+  //         month: selectedMonth,
+  //       }),
+  //     });
+
+  //     if (!res.ok) {
+  //       throw new Error("Failed to unpublish");
+  //     }
+
+  //     setIsPublished(false);
+  //     setPublishedAt(null);
+  //     setIsDrafted(false);
+  //     setDraftedAt(null);
+
+  //     showToast("Bill unpublished successfully", "success");
+  //   } catch (err) {
+  //     console.error(err);
+  //     showToast("Error unpublishing bill", "error");
+  //   } finally {
+  //     setActionLoading(false);
+  //   }
+  // }
+
+  // // ─── REGENERATE DUES ───────────────────────────────────────
+  // async function regenerateDues() {
+  //   const confirm = window.confirm(
+  //     `Regenerate mess dues for ${selectedMonth}?\n\n⚠️ This will delete existing unpaid mess dues for this month and recreate them based on current attendance and expense calculations.`
+  //   );
+  //   if (!confirm) return;
+
+  //   setActionLoading(true);
+  //   try {
+  //     const bills = allStudents
+  //       .filter(student => student.attendance?.some(r => r.date.startsWith(selectedMonth)))
+  //       .map((student) => {
+  //         const days = calculateAttendance(student);
+  //         const foodBill = days * foodRatePerDay;
+  //         const totalBill = foodBill + staffRatePerStudent;
+  //         return {
+  //           studentId: student._id,
+  //           amount: Math.round(totalBill)
+  //         };
+  //       });
+
+  //     const res = await fetch(`${API}/api/bill/regenerate-dues`, {
+  //       method: "POST",
+  //       headers: { "Content-Type": "application/json" },
+  //       body: JSON.stringify({ month: selectedMonth, bills }),
+  //     });
+  //     if (!res.ok) throw new Error("Failed to regenerate dues");
+  //     const data = await res.json();
+  //     showToast(data.message, "success");
+  //   } catch (err) {
+  //     showToast("Error regenerating dues.", "error");
+  //     console.error(err);
+  //   } finally {
+  //     setActionLoading(false);
+  //   }
+  // }
+
   // ─── FETCH ALL DATA ────────────────────────────────────────
   useEffect(() => {
     const fetchData = async () => {
@@ -177,7 +322,7 @@ export default function MessBill() {
         setLoading(true);
         setError("");
 
-        
+
 
         const [studentsRes, expensesRes, balanceRes, billStatusRes] =
           await Promise.all([
@@ -202,10 +347,10 @@ export default function MessBill() {
           prevBalance: balanceData?.prevBalance || 0,
           closingBalance: balanceData?.closingBalance || 0,
         });
-        setIsDrafted(billData?.drafted || false);
-        setIsPublished(billData?.published || false);
-        setDraftedAt(billData?.draftedAt || null);
-        setPublishedAt(billData?.publishedAt || null);
+        setIsDrafted(!!billData?.drafted);
+        setIsPublished(!!billData?.published);
+        setDraftedAt(billData?.draftedAt ?? null);
+        setPublishedAt(billData?.publishedAt ?? null);
         setLoading(false);
       } catch (err) {
         setError(err.message);
@@ -232,7 +377,9 @@ export default function MessBill() {
 
     for (let d = 1; d <= lastDay; d++) {
       const dateStr = `${y}-${String(m).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
-      const rec = records.find((r) => r.date === dateStr);
+      const rec = records.find(
+        (r) => r.date?.slice(0, 10) === dateStr
+      );
 
       if (!rec) {
         if (currentChain) { chains.push(currentChain); currentChain = null; }
@@ -262,8 +409,17 @@ export default function MessBill() {
     let count = 0;
     for (let d = 1; d <= lastDay; d++) {
       const dateStr = `${y}-${String(m).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
-      const rec = records.find((r) => r.date === dateStr);
-      if (rec && !skipped.has(dateStr)) count++;
+      const rec = records.find(
+        (r) => r.date?.slice(0, 10) === dateStr
+      );
+      if (
+        rec &&
+        rec.present &&
+        !rec.messCut &&
+        !skipped.has(dateStr)
+      ) {
+        count++;
+      }
     }
     return count;
   }
@@ -282,37 +438,38 @@ export default function MessBill() {
 
   // ─── DOWNLOAD PDF ──────────────────────────────────────────
   function downloadPDF() {
-    const doc = new jsPDF();
+    const doc = new jsPDF({ orientation: "landscape", unit: "mm", format: "a4" });
+    const pageW = doc.internal.pageSize.getWidth();   // 297 mm
+    const pageH = doc.internal.pageSize.getHeight();  // 210 mm
+    const margin = 14;
+    const contentW = pageW - margin * 2;
+
     const monthLabel = PERIOD_OPTIONS.find((o) => o.value === selectedMonth)?.label || selectedMonth;
     const generatedOn = new Date().toLocaleDateString("en-IN", { day: "2-digit", month: "long", year: "numeric" });
 
     // ── Header ──
     doc.setFillColor(30, 58, 138);
-    doc.rect(0, 0, 210, 28, "F");
+    doc.rect(0, 0, pageW, 28, "F");
     doc.setTextColor(255, 255, 255);
-    doc.setFontSize(16);
+    doc.setFontSize(18);
     doc.setFont("helvetica", "bold");
-    doc.text("Mess Bill", 14, 12);
+    doc.text("Mess Bill", margin, 13);
     doc.setFontSize(10);
     doc.setFont("helvetica", "normal");
-    doc.text(`Period: ${monthLabel}`, 14, 20);
-    doc.text(`Generated: ${generatedOn}`, 150, 20);
+    doc.text(`Period: ${monthLabel}`, margin, 22);
+    doc.text(`Generated: ${generatedOn}`, pageW - margin, 22, { align: "right" });
 
     // ── Status badge ──
     doc.setTextColor(30, 58, 138);
     doc.setFontSize(9);
     doc.setFont("helvetica", "bold");
     const status = isPublished ? "PUBLISHED" : isDrafted ? "DRAFT" : "PREVIEW";
-    doc.text(`Status: ${status}`, 14, 35);
+    doc.text(`Status: ${status}`, margin, 37);
 
     // ── Summary box ──
     doc.setDrawColor(191, 219, 254);
     doc.setFillColor(239, 246, 255);
-    doc.roundedRect(14, 40, 182, 32, 3, 3, "FD");
-
-    doc.setTextColor(100, 116, 139);
-    doc.setFontSize(8);
-    doc.setFont("helvetica", "normal");
+    doc.roundedRect(margin, 42, contentW, 24, 3, 3, "FD");
 
     const summaryItems = [
       ["Food Expenses", `Rs.${foodExpenses.toFixed(2)}`],
@@ -324,63 +481,88 @@ export default function MessBill() {
       ["Staff/Student", `Rs.${staffRatePerStudent.toFixed(2)}`],
     ];
 
-    const colW = 182 / summaryItems.length;
+    const colW = contentW / summaryItems.length;
     summaryItems.forEach(([label, val], i) => {
-      const x = 14 + i * colW + colW / 2;
+      const x = margin + i * colW + colW / 2;
       doc.setTextColor(100, 116, 139);
       doc.setFont("helvetica", "normal");
-      doc.text(label, x, 49, { align: "center" });
+      doc.setFontSize(8);
+      doc.text(label, x, 52, { align: "center" });
       doc.setTextColor(15, 23, 42);
       doc.setFont("helvetica", "bold");
-      doc.setFontSize(9);
-      doc.text(val, x, 57, { align: "center" });
-      doc.setFontSize(8);
+      doc.setFontSize(9.5);
+      doc.text(val, x, 61, { align: "center" });
     });
 
     // ── Student table ──
     const rows = allStudents.map((student) => {
       const days = calculateAttendance(student);
       const foodBill = days * foodRatePerDay;
-      const totalBill = foodBill + staffRatePerStudent;
+      const milkDays =
+        student.attendance?.filter(
+          (r) =>
+            new Date(r.date).toISOString().startsWith(selectedMonth) && r.milk
+        ).length || 0;
+      const milkCharge = milkDays * 8;
+      const totalBill = foodBill + staffRatePerStudent + milkCharge;
       return [
         student.room,
         student.name,
         String(days),
         `Rs.${foodBill.toFixed(2)}`,
+        String(milkDays),
+        `Rs.${milkCharge.toFixed(2)}`,
         `Rs.${staffRatePerStudent.toFixed(2)}`,
         `Rs.${totalBill.toFixed(2)}`,
       ];
     });
 
     autoTable(doc, {
-      startY: 78,
-      head: [["Room", "Student", "Attendance Days", "Food Bill", "Staff Share", "Total Bill"]],
+      startY: 82,
+      head: [["Room", "Student", "Attendance", "Food Bill", "Milk Days", "Milk Charge", "Staff Share", "Total Bill"]],
       body: rows,
-      styles: { fontSize: 9, cellPadding: 4, font: "helvetica" },
+      styles: {
+        fontSize: 9,
+        cellPadding: {
+          top: 3,
+          right: 3,
+          bottom: 3,
+          left: 5,
+        },
+        font: "helvetica",
+        overflow: "linebreak",
+        valign: "middle",
+      },
       headStyles: {
-        fillColor: [30, 58, 138], textColor: 255,
-        fontStyle: "bold", halign: "center",
+        fillColor: [30, 58, 138],
+        textColor: 255,
+        fontStyle: "bold",
+        halign: "center",
+        fontSize: 9.5,
       },
       columnStyles: {
-        0: { halign: "center", cellWidth: 20 },
-        2: { halign: "center", cellWidth: 30 },
+        0: { halign: "center", cellWidth: 22 },
+        1: { cellWidth: 62, halign: "left" },          // was 70
+        2: { halign: "center", cellWidth: 28 },
         3: { halign: "right", cellWidth: 32 },
-        4: { halign: "right", cellWidth: 32 },
-        5: { halign: "right", cellWidth: 32, fontStyle: "bold" },
+        4: { halign: "center", cellWidth: 24 },
+        5: { halign: "right", cellWidth: 30 },
+        6: { halign: "right", cellWidth: 35 },
+        7: { halign: "right", cellWidth: 36, fontStyle: "bold" }, // Total Bill
       },
       alternateRowStyles: { fillColor: [248, 250, 252] },
       tableLineColor: [226, 232, 240],
-      tableLineWidth: 0.2,
+      tableLineWidth: 0.3,
+      margin: { left: margin, right: margin },
     });
 
     // ── Footer ──
-    const pageH = doc.internal.pageSize.height;
     doc.setFillColor(248, 250, 252);
-    doc.rect(0, pageH - 12, 210, 12, "F");
+    doc.rect(0, pageH - 12, pageW, 12, "F");
     doc.setTextColor(148, 163, 184);
     doc.setFontSize(8);
     doc.setFont("helvetica", "normal");
-    doc.text("Generated by Mess Management System", 105, pageH - 4, { align: "center" });
+    doc.text("Generated by Mess Management System", pageW / 2, pageH - 4, { align: "center" });
 
     doc.save(`MessBill_${selectedMonth}.pdf`);
   }
@@ -397,7 +579,7 @@ export default function MessBill() {
 
   const PERIOD_OPTIONS = [
     { label: `${MONTHS[prevM - 1]} ${prevY}`, value: `${prevY}-${String(prevM).padStart(2, "0")}` },
-    { label: `${MONTHS[nowM - 1]} ${nowY}`,   value: `${nowY}-${String(nowM).padStart(2, "0")}` },
+    { label: `${MONTHS[nowM - 1]} ${nowY}`, value: `${nowY}-${String(nowM).padStart(2, "0")}` },
   ];
 
   return (
@@ -453,29 +635,76 @@ export default function MessBill() {
             </button>
 
             {/* Draft / Publish action button */}
-            {!isPublished && !isDrafted && (
-              <button onClick={sendDraft} disabled={actionLoading || loading} style={btnStyle("#3b82f6", "#2563eb")}>
-                {actionLoading ? "Sending..." : "📋 Send Draft"}
+
+            {!isPublished && (
+              <button
+                onClick={sendDraft}
+                disabled={actionLoading || loading}
+                style={
+                  isDrafted
+                    ? btnStyle("#0ea5e9", "#0284c7")
+                    : btnStyle("#3b82f6", "#2563eb")
+                }
+              >
+                {actionLoading
+                  ? (isDrafted ? "Updating..." : "Sending...")
+                  : (isDrafted ? "🔄 Resend Draft" : "📋 Send Draft")}
               </button>
             )}
+
             {isDrafted && !isPublished && (() => {
-              const currentMonthStr = `${nowY}-${String(nowM).padStart(2, "0")}`;
-              const isCurrentMonth = selectedMonth === currentMonthStr;
+              const currentMonthStr =
+                `${nowY}-${String(nowM).padStart(2, "0")}`;
+
+              const isCurrentMonth =
+                selectedMonth === currentMonthStr;
+
               return (
                 <button
                   onClick={publishBill}
-                  disabled={actionLoading || loading || isCurrentMonth}
-                  title={isCurrentMonth ? `Cannot publish current month's bill` : ""}
+                  disabled={
+                    actionLoading ||
+                    loading ||
+                    isCurrentMonth
+                  }
+                  title={
+                    isCurrentMonth
+                      ? `Cannot publish current month's bill`
+                      : ""
+                  }
                   style={{
                     ...btnStyle("#f59e0b", "#d97706"),
                     opacity: isCurrentMonth ? 0.45 : 1,
-                    cursor: isCurrentMonth ? "not-allowed" : "pointer",
+                    cursor: isCurrentMonth
+                      ? "not-allowed"
+                      : "pointer",
                   }}
                 >
-                  {actionLoading ? "Publishing..." : "📢 Publish Bill"}
+                  {actionLoading
+                    ? "Publishing..."
+                    : "📢 Publish Bill"}
                 </button>
               );
             })()}
+            {/* {isPublished && (
+              <button
+                onClick={unpublishBill}
+                disabled={actionLoading || loading}
+                style={btnStyle("#ef4444", "#dc2626")}
+              >
+                {actionLoading ? "Processing..." : "↩ Unpublish Bill"}
+              </button>
+            )} */}
+            {/* {isPublished && (
+              <button
+                onClick={regenerateDues}
+                disabled={actionLoading || loading}
+                title="Re-calculate and re-create dues for this month"
+                style={btnStyle("#ef4444", "#b91c1c")}
+              >
+                {actionLoading ? "Processing..." : "🔄 Regenerate Dues"}
+              </button>
+            )} */}
           </div>
         </div>
 
@@ -526,28 +755,57 @@ export default function MessBill() {
                 <th>Student</th>
                 <th>Attendance Days</th>
                 <th>Food Bill</th>
+                <th>Rate/Day</th>
+                <th>Milk</th>
+                <th>Milk Charge</th>
                 <th>Staff Share</th>
                 <th>Total Bill</th>
               </tr>
             </thead>
             <tbody>
               {loading ? (
-                <tr><td colSpan="6" style={{ textAlign: "center", padding: "20px" }}>Loading...</td></tr>
+                <tr><td colSpan="9" style={{ textAlign: "center", padding: "20px" }}>Loading...</td></tr>
               ) : allStudents.length === 0 ? (
-                <tr><td colSpan="6" style={{ textAlign: "center", padding: "20px" }}>No students found.</td></tr>
+                <tr><td colSpan="9" style={{ textAlign: "center", padding: "20px" }}>No students found.</td></tr>
               ) : (
                 allStudents.map((student) => {
                   const days = calculateAttendance(student);
                   const foodBill = days * foodRatePerDay;
-                  const totalBill = foodBill + staffRatePerStudent;
+
+                  const milkDays =
+                    student.attendance?.filter(
+                      (r) =>
+                        new Date(r.date)
+                          .toISOString()
+                          .startsWith(selectedMonth) &&
+                        r.milk &&
+                        r.present &&
+                        !r.messCut
+                    ).length || 0;
+
+                  const milkCharge = milkDays * 8;
+
+                  const totalBill =
+                    foodBill +
+                    staffRatePerStudent +
+                    milkCharge;
                   return (
                     <tr key={student._id}>
                       <td>{student.room}</td>
                       <td>{student.name}</td>
                       <td>{days}</td>
                       <td>₹{foodBill.toFixed(2)}</td>
+                      <td>₹{foodRatePerDay.toFixed(2)}</td>
+
+                      <td>{milkDays}</td>
+
+                      <td>₹{milkCharge.toFixed(2)}</td>
+
                       <td>₹{staffRatePerStudent.toFixed(2)}</td>
-                      <td><b>₹{totalBill.toFixed(2)}</b></td>
+
+                      <td>
+                        <b>₹{totalBill.toFixed(2)}</b>
+                      </td>
                     </tr>
                   );
                 })
@@ -561,7 +819,7 @@ export default function MessBill() {
       <div className="summary-card">
         {[0, 1].map((i) => (
           <div key={i} className="summary-card-track">
-            <div>Food: ₹{foodExpenses.toFixed(2)}</div>
+            {/*<div>Food: ₹{foodExpenses.toFixed(2)}</div>*/}
             <div>Staff: ₹{staffExpenses.toFixed(2)}</div>
             <div>Attendance: {totalAttendance} days</div>
             <div>Food Rate/Day: ₹{foodRatePerDay.toFixed(2)}</div>

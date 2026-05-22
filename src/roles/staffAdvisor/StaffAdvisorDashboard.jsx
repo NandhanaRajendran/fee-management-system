@@ -2,6 +2,7 @@ import React, { useState, useMemo, useEffect } from "react";
 import { Search, LogOut, ArrowUpDown, ArrowUp, ArrowDown, Download } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import "../../styles/staffadvisor.css";
+import API from "../../config/api";
 
 const StaffAdvisorDashboard = () => {
 
@@ -21,7 +22,7 @@ const StaffAdvisorDashboard = () => {
   const [selectedFee] = useState("All");
   const [activeTab, setActiveTab] = useState("overview");
 
-  const API = "https://mess-management-system-q6us.onrender.com"
+  //const API = "https://mess-management-system-q6us.onrender.com"
   //const API = "http://localhost:8000"
 
   const navigate = useNavigate();

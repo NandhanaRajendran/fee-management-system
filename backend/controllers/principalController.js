@@ -13,21 +13,21 @@ exports.getDashboardData = async (req, res) => {
         const dues = await Due.find({ status: { $in: ["pending", "Pending"] } }).populate("feeSection");
 
         const allSections = await FeeSection.find({}).select("name");
-        
+
         const fineSectionNames = allSections.filter(s => {
-           const ln = s.name.toLowerCase();
-           return ln.includes("hod") || ln.includes("advisor") || ln.includes("library") || ln.includes("fine");
+            const ln = s.name.toLowerCase();
+            return ln.includes("hod") || ln.includes("advisor") || ln.includes("library") || ln.includes("fine");
         }).map(s => s.name);
 
         const dynamicSections = allSections
-          .filter(s => !fineSectionNames.includes(s.name))
-          .map(s => s.name);
+            .filter(s => !fineSectionNames.includes(s.name))
+            .map(s => s.name);
 
         const columnList = [...dynamicSections, "Fine"];
 
         const processedStudents = students.map((student) => {
             const studentDues = dues.filter(due => due.student.toString() === student._id.toString());
-            
+
             let fees = { Fine: 0 };
             dynamicSections.forEach(name => { fees[name] = 0; });
 
@@ -48,6 +48,7 @@ exports.getDashboardData = async (req, res) => {
                 admission: student.admissionNo || "N/A",
                 name: student.name,
                 department: student.department ? student.department.name : "N/A",
+                className: student.className || "",
                 ...fees
             };
         });

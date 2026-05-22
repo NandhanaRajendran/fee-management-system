@@ -1,9 +1,9 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import Layout from "../../components/Layout";
 import AlertToast from "../../components/Alerttoast";
-
+import API from "../../config/api";
+//const API = "https://mess-management-system-q6us.onrender.com";
 //const API = "http://localhost:8000";
-const API = "https://mess-management-system-q6us.onrender.com";
 
 const ModernSelect = ({ value, onChange, options, style, disabled }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -77,8 +77,8 @@ const ModernSelect = ({ value, onChange, options, style, disabled }) => {
 };
 
 const STAFF_CONFIG = {
-  "Cook Salary":   { label: "Cook",   ratePerDay: 710, maxDays: (dim) => dim - 1 },
-  "Matron Salary": { label: "Matron", ratePerDay: 800, maxDays: ()    => 27      },
+  "Cook Salary": { label: "Cook", ratePerDay: 710, maxDays: (dim) => dim - 1 },
+  "Matron Salary": { label: "Matron", ratePerDay: 800, maxDays: () => 27 },
 };
 
 export default function Attendance() {
@@ -90,32 +90,32 @@ export default function Attendance() {
   const daysInMonth = new Date(y, m, 0).getDate();
 
   const nowDate = new Date();
-  const nowY    = nowDate.getFullYear();
-  const nowM    = nowDate.getMonth() + 1;
-  const prevM   = nowM === 1 ? 12 : nowM - 1;
-  const prevY   = nowM === 1 ? nowY - 1 : nowY;
+  const nowY = nowDate.getFullYear();
+  const nowM = nowDate.getMonth() + 1;
+  const prevM = nowM === 1 ? 12 : nowM - 1;
+  const prevY = nowM === 1 ? nowY - 1 : nowY;
 
   const tomorrow = new Date();
   tomorrow.setDate(tomorrow.getDate() + 1);
   const maxDate = tomorrow.toISOString().split("T")[0];
 
-  const MONTH_NAMES = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+  const MONTH_NAMES = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
   const YEAR_OPTIONS = [...new Set([prevY, nowY])];
 
-  const pickerYear  = parseInt(date.split("-")[0]);
+  const pickerYear = parseInt(date.split("-")[0]);
   const pickerMonth = parseInt(date.split("-")[1]);
-  const pickerDay   = parseInt(date.split("-")[2]);
+  const pickerDay = parseInt(date.split("-")[2]);
 
   const MONTH_OPTIONS = MONTH_NAMES.map((name, i) => ({ name, num: i + 1 })).filter(({ num }) => {
     if (pickerYear === nowY && pickerYear === prevY) return num === nowM || num === prevM;
-    if (pickerYear === nowY)  return num === nowM;
+    if (pickerYear === nowY) return num === nowM;
     if (pickerYear === prevY) return num === prevM;
     return false;
   });
 
   const daysInPickerMonth = new Date(pickerYear, pickerMonth, 0).getDate();
   const DAYS = Array.from({ length: daysInPickerMonth }, (_, i) => i + 1).filter((d) => {
-    const dStr = `${pickerYear}-${String(pickerMonth).padStart(2,"0")}-${String(d).padStart(2,"0")}`;
+    const dStr = `${pickerYear}-${String(pickerMonth).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
     return dStr <= maxDate;
   });
 
@@ -125,26 +125,26 @@ export default function Attendance() {
     if (yy === prevY && yy !== nowY) mm = prevM;
     const maxD = new Date(yy, mm, 0).getDate();
     const d = Math.min(pickerDay, maxD);
-    const newDate = `${yy}-${String(mm).padStart(2,"0")}-${String(d).padStart(2,"0")}`;
+    const newDate = `${yy}-${String(mm).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
     setDate(newDate <= maxDate ? newDate : maxDate);
   }
   function handlePickerMonth(mm) {
     const maxD = new Date(pickerYear, mm, 0).getDate();
     const d = Math.min(pickerDay, maxD);
-    const newDate = `${pickerYear}-${String(mm).padStart(2,"0")}-${String(d).padStart(2,"0")}`;
+    const newDate = `${pickerYear}-${String(mm).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
     setDate(newDate <= maxDate ? newDate : maxDate);
   }
   function handlePickerDay(d) {
-    setDate(`${pickerYear}-${String(pickerMonth).padStart(2,"0")}-${String(d).padStart(2,"0")}`);
+    setDate(`${pickerYear}-${String(pickerMonth).padStart(2, "0")}-${String(d).padStart(2, "0")}`);
   }
 
-  const [students,      setStudents]      = useState([]);
-  const [loading,       setLoading]       = useState(true);
-  const [error,         setError]         = useState("");
-  const [isPublished,   setIsPublished]   = useState(false);
-  const [toast,         setToast]         = useState(null);
-  const [updating,      setUpdating]      = useState(null);
-  const [staffAtt,      setStaffAtt]      = useState({ "Cook Salary": {}, "Matron Salary": {} });
+  const [students, setStudents] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [isPublished, setIsPublished] = useState(false);
+  const [toast, setToast] = useState(null);
+  const [updating, setUpdating] = useState(null);
+  const [staffAtt, setStaffAtt] = useState({ "Cook Salary": {}, "Matron Salary": {} });
   const [staffUpdating, setStaffUpdating] = useState(null);
 
   const showToast = (message, type = "info") => setToast({ message, type });
@@ -157,8 +157,8 @@ export default function Attendance() {
         fetch(`${API}/api/staff-attendance/${selectedMonth}`),
       ]);
       if (!studRes.ok) throw new Error("Failed to fetch students");
-      const studData  = await studRes.json();
-      const billData  = billRes.ok  ? await billRes.json()  : {};
+      const studData = await studRes.json();
+      const billData = billRes.ok ? await billRes.json() : {};
       const staffData = staffRes.ok ? await staffRes.json() : [];
 
       const hostelInmates = studData.filter(s => s.room && s.room.trim() !== "");
@@ -186,7 +186,7 @@ export default function Attendance() {
 
   async function toggleStaffPresent(type) {
     if (isPublished) { showToast("Attendance is frozen — bill has been published.", "warning"); return; }
-    const current    = getStaffPresent(type);
+    const current = getStaffPresent(type);
     const newRecords = { ...staffAtt[type], [date]: !current };
     setStaffAtt((prev) => ({ ...prev, [type]: newRecords }));
     setStaffUpdating(type);
@@ -207,8 +207,8 @@ export default function Attendance() {
 
   function staffMonthlyCount(type) {
     const records = staffAtt[type] || {};
-    const actual  = Object.entries(records).filter(([d, p]) => d.startsWith(selectedMonth) && p).length;
-    const max     = STAFF_CONFIG[type].maxDays(daysInMonth);
+    const actual = Object.entries(records).filter(([d, p]) => d.startsWith(selectedMonth) && p).length;
+    const max = STAFF_CONFIG[type].maxDays(daysInMonth);
     return { actual, capped: Math.min(actual, max), max };
   }
 
@@ -218,15 +218,53 @@ export default function Attendance() {
   }
 
   function getDailyRecord(student) {
-    const record = student.attendance?.find((r) => r.date === date);
-    return { present: record?.present ?? false, messcut: record?.messCut ?? true };
+
+    const record =
+      student.attendance?.find(
+        (r) =>
+          new Date(r.date)
+            .toISOString()
+            .slice(0, 10) === date
+      );
+
+    return {
+      present: record?.present ?? false,
+      messCut: record?.messCut ?? true,
+      milk: record?.milk ?? false
+    };
   }
 
-  function getStatus(present, messcut) {
-    if ( present && !messcut) return { label: "Present", bg: "#1D9E75", color: "#fff" };
-    if ( present &&  messcut) return { label: "Present", bg: "#7F77DD", color: "#fff" };
-    if (!present && !messcut) return { label: "Absent",  bg: "#EF9F27", color: "#fff" };
-    return                           { label: "Absent",  bg: "#E24B4A", color: "#fff" };
+  function getStatus(present, messCut) {
+
+    if (present && !messCut) {
+      return {
+        label: "Present",
+        bg: "#1D9E75",
+        color: "#fff"
+      };
+    }
+
+    if (present && messCut) {
+      return {
+        label: "Present+Cut",
+        bg: "#7F77DD",
+        color: "#fff"
+      };
+    }
+
+    if (!present && !messCut) {
+      return {
+        label: "Absent",
+        bg: "#EF9F27",
+        color: "#fff"
+      };
+    }
+
+    return {
+      label: "Absent+Cut",
+      bg: "#E24B4A",
+      color: "#fff"
+    };
   }
 
   function monthlyCount(student) {
@@ -253,8 +291,13 @@ export default function Attendance() {
     let currentChain = null;
 
     for (let d = 1; d <= lastDay; d++) {
-      const dateStr = `${yr}-${String(mo).padStart(2,"0")}-${String(d).padStart(2,"0")}`;
-      const rec     = records.find((r) => r.date === dateStr);
+      const dateStr = `${yr}-${String(mo).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
+      const rec = records.find(
+        (r) =>
+          new Date(r.date)
+            .toISOString()
+            .slice(0, 10) === dateStr
+      );
 
       // No record = not marked, skip entirely — breaks any open chain
       if (!rec) {
@@ -285,25 +328,51 @@ export default function Attendance() {
     // Only count recorded days that are not skipped
     let count = 0;
     for (let d = 1; d <= lastDay; d++) {
-      const dateStr = `${yr}-${String(mo).padStart(2,"0")}-${String(d).padStart(2,"0")}`;
-      const rec = records.find((r) => r.date === dateStr);
+      const dateStr = `${yr}-${String(mo).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
+      const rec = records.find(
+        (r) =>
+          new Date(r.date)
+            .toISOString()
+            .slice(0, 10) === dateStr
+      );
       if (rec && !skipped.has(dateStr)) count++;
     }
     return count;
   }
 
-  async function updateAttendance(student, newPresent, newMesscut) {
+  async function updateAttendance(student, newPresent, newmessCut, newMilk) {
     if (isPublished) { showToast("Attendance is frozen — bill has been published.", "warning"); return; }
+
+    // Restrict "Present + Mess Cut" to maximum 3 days per month
+    if (newPresent && newmessCut) {
+      const monthRecords = student.attendance?.filter(r => r.date.startsWith(selectedMonth) && r.date !== date) || [];
+      const presentCutCount = monthRecords.filter(r => r.present && r.messCut).length;
+      if (presentCutCount >= 3) {
+        showToast("Maximum of 3 Present + Mess Cut allowed per month.", "warning");
+        return;
+      }
+    }
+
     setUpdating(student._id);
     try {
+      console.log({
+        date,
+        present: newPresent,
+        messCut: newmessCut,
+        milk: newMilk
+      });
       const res = await fetch(`${API}/api/students/attendance/${student._id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ date, present: newPresent, messCut: newMesscut }),
+        body: JSON.stringify({
+          date,
+          present: newPresent,
+          messCut: newmessCut,
+          milk: newMilk
+        }),
       });
       if (!res.ok) throw new Error();
-      const updated = await res.json();
-      setStudents((prev) => prev.map((s) => s._id === updated._id ? updated : s));
+      await fetchAll();
     } catch {
       showToast("Error updating attendance.", "error");
     } finally {
@@ -312,19 +381,68 @@ export default function Attendance() {
   }
 
   function togglePresent(student) {
-    const { present, messcut } = getDailyRecord(student);
-    updateAttendance(student, !present, messcut);
+
+    const {
+      present,
+      messCut,
+      milk
+    } = getDailyRecord(student);
+
+    updateAttendance(
+      student,
+      !present,
+      messCut,
+      milk
+    );
   }
 
   function toggleCut(student) {
-    const { present, messcut } = getDailyRecord(student);
-    updateAttendance(student, present, !messcut);
+
+    const {
+      present,
+      messCut,
+      milk
+    } = getDailyRecord(student);
+
+    updateAttendance(
+      student,
+      present,
+      !messCut,
+      milk
+    );
+  }
+  function toggleMilk(student) {
+
+    const {
+      present,
+      messCut,
+      milk
+    } = getDailyRecord(student);
+
+    console.log("MILK BUTTON CLICKED");
+    console.log("Student:", student.name);
+    console.log("Current milk:", milk);
+    console.log("New milk:", !milk);
+
+    updateAttendance(
+      student,
+      present,
+      messCut,
+      !milk
+    );
   }
 
   async function markAll(type) {
     if (isPublished) { showToast("Attendance is frozen.", "warning"); return; }
     for (const s of students) {
-      await updateAttendance(s, type === "present", type === "cut");
+      const rec = getDailyRecord(s);
+
+      await updateAttendance(
+        s,
+        type === "present",
+        type === "cut",
+        rec.milk
+      );
     }
   }
 
@@ -350,7 +468,7 @@ export default function Attendance() {
               <ModernSelect
                 value={pickerDay}
                 onChange={(e) => handlePickerDay(Number(e.target.value))}
-                options={DAYS.map((d) => ({ value: d, label: String(d).padStart(2,"0") }))}
+                options={DAYS.map((d) => ({ value: d, label: String(d).padStart(2, "0") }))}
                 style={{ width: "80px" }}
               />
               <ModernSelect
@@ -369,10 +487,10 @@ export default function Attendance() {
           </div>
           <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
             {[
-              { label: "Present",         bg: "#1D9E75" },
-              { label: "Present + Cut",   bg: "#7F77DD" },
+              { label: "Present", bg: "#1D9E75" },
+              { label: "Present + Cut", bg: "#7F77DD" },
               { label: "Absent (counts)", bg: "#EF9F27" },
-              { label: "Absent + Cut",    bg: "#E24B4A" },
+              { label: "Absent + Cut", bg: "#E24B4A" },
             ].map(({ label, bg }) => (
               <span key={label} style={{ display: "flex", alignItems: "center", gap: "5px", fontSize: "11px", color: "#64748b", background: "#f8faff", border: "1px solid #e2e8f0", borderRadius: "6px", padding: "3px 8px" }}>
                 <span style={{ width: "8px", height: "8px", borderRadius: "3px", background: bg, display: "inline-block" }}></span>
@@ -408,19 +526,19 @@ export default function Attendance() {
 
         {/* DAILY COUNT SUMMARY */}
         {!loading && (() => {
-          const total   = students.length;
+          const total = students.length;
           const present = students.filter(s => getDailyRecord(s).present).length;
-          const absent  = total - present;
-          const cut     = students.filter(s => getDailyRecord(s).messcut).length;
-          const food    = students.filter(s => !getDailyRecord(s).messcut).length;
+          const absent = total - present;
+          const cut = students.filter(s => getDailyRecord(s).messCut).length;
+          const food = students.filter(s => !getDailyRecord(s).messCut).length;
           return (
             <div style={{ display: "flex", gap: "10px", marginBottom: "14px", flexWrap: "wrap" }}>
               {[
-                { label: "Total Students", value: total,   hl: false },
-                { label: "Present",        value: present, hl: false },
-                { label: "Absent",         value: absent,  hl: false },
-                { label: "Mess Cut",       value: cut,     hl: false },
-                { label: "Food Count",     value: food,    hl: true  },
+                { label: "Total Students", value: total, hl: false },
+                { label: "Present", value: present, hl: false },
+                { label: "Absent", value: absent, hl: false },
+                { label: "Mess Cut", value: cut, hl: false },
+                { label: "Food Count", value: food, hl: true },
               ].map(({ label, value, hl }) => (
                 <div key={label} style={{
                   background: hl ? "#eff6ff" : "#ffffff",
@@ -446,7 +564,15 @@ export default function Attendance() {
             <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "13px" }}>
               <thead>
                 <tr style={{ background: "#f8fafc" }}>
-                  {[["Room/Role", true], ["Ad No / Rate", true], ["Name", true], ["Daily Attendance", false], ["Mess Cut", false], ["Monthly", false]].map(([h, left]) => (
+                  {[
+                    ["Room/Role", true],
+                    ["Ad No / Rate", true],
+                    ["Name", true],
+                    ["Daily Attendance", false],
+                    ["Mess Cut", false],
+                    ["Milk", false],
+                    ["Monthly", false]
+                  ].map(([h, left]) => (
                     <th key={h} style={thStyle(left)}>{h}</th>
                   ))}
                 </tr>
@@ -455,10 +581,10 @@ export default function Attendance() {
 
                 {/* ── STAFF ROWS ── */}
                 {Object.entries(STAFF_CONFIG).map(([type, cfg]) => {
-                  const present  = getStaffPresent(type);
-                  const isUpd    = staffUpdating === type;
+                  const present = getStaffPresent(type);
+                  const isUpd = staffUpdating === type;
                   const { actual, capped, max } = staffMonthlyCount(type);
-                  const salary   = staffSalary(type);
+                  const salary = staffSalary(type);
                   const isCapped = actual > max;
 
                   return (
@@ -508,18 +634,22 @@ export default function Attendance() {
 
                 {/* ── DIVIDER ── */}
                 <tr>
-                  <td colSpan={6} style={{ background: "#f8faff", padding: "6px 14px", fontSize: "10px", fontWeight: "700", textTransform: "uppercase", letterSpacing: "0.1em", color: "#94a3b8", borderTop: "2px solid #e2e8f0", borderBottom: "2px solid #e2e8f0" }}>
+                  <td colSpan={7} style={{ background: "#f8faff", padding: "6px 14px", fontSize: "10px", fontWeight: "700", textTransform: "uppercase", letterSpacing: "0.1em", color: "#94a3b8", borderTop: "2px solid #e2e8f0", borderBottom: "2px solid #e2e8f0" }}>
                     Students
                   </td>
                 </tr>
 
                 {/* ── STUDENT ROWS ── */}
                 {students.map((student) => {
-                  const { present, messcut } = getDailyRecord(student);
-                  const status    = getStatus(present, messcut);
+                  const {
+                    present,
+                    messCut,
+                    milk
+                  } = getDailyRecord(student);
+                  const status = getStatus(present, messCut);
                   const isNewRoom = student.room !== prevRoom;
-                  prevRoom        = student.room;
-                  const isUpd     = updating === student._id;
+                  prevRoom = student.room;
+                  const isUpd = updating === student._id;
 
                   return (
                     <tr key={student._id} style={{ borderTop: isNewRoom && students.indexOf(student) !== 0 ? "2px solid #e2e8f0" : "1px solid #f1f5f9", opacity: isUpd ? 0.6 : 1, transition: "opacity 0.15s" }}>
@@ -534,11 +664,51 @@ export default function Attendance() {
                       </td>
                       <td style={{ padding: "10px 14px", textAlign: "center" }}>
                         <button onClick={() => toggleCut(student)} disabled={isPublished || isUpd}
-                          style={{ background: messcut ? "#7F77DD" : "#f1f5f9", color: messcut ? "#fff" : "#64748b", border: "1px solid #e2e8f0", padding: "5px 14px", borderRadius: "8px", fontSize: "12px", fontWeight: "600", cursor: isPublished ? "not-allowed" : "pointer" }}>
-                          {messcut ? "Cut" : "No Cut"}
+                          style={{ background: messCut ? "#7F77DD" : "#f1f5f9", color: messCut ? "#fff" : "#64748b", border: "1px solid #e2e8f0", padding: "5px 14px", borderRadius: "8px", fontSize: "12px", fontWeight: "600", cursor: isPublished ? "not-allowed" : "pointer" }}>
+                          {messCut ? "Cut" : "No Cut"}
                         </button>
                       </td>
-                      <td style={{ padding: "10px 14px", textAlign: "center", color: "#64748b", fontSize: "12px" }}>
+                      <td style={{ padding: "10px 14px", textAlign: "center" }}>
+
+                        <button
+                          onClick={() => toggleMilk(student)}
+                          disabled={
+                            !present ||
+                            messCut ||
+                            isPublished ||
+                            isUpd
+                          }
+                          style={{
+                            background: milk ? "#38bdf8" : "#f1f5f9",
+                            color: milk ? "#fff" : "#64748b",
+                            border: "1px solid #e2e8f0",
+                            padding: "5px 14px",
+                            borderRadius: "8px",
+                            fontSize: "12px",
+                            fontWeight: "600",
+                            cursor:
+                              (!present || messCut || isPublished)
+                                ? "not-allowed"
+                                : "pointer",
+
+                            opacity:
+                              (!present || messCut)
+                                ? 0.5
+                                : 1
+                          }}
+                        >
+                          {milk ? "Milk" : "No Milk"}
+                        </button>
+
+                      </td>
+                      <td
+                        style={{
+                          padding: "10px 14px",
+                          textAlign: "center",
+                          color: "#64748b",
+                          fontSize: "12px"
+                        }}
+                      >
                         {monthlyCount(student)} days
                       </td>
                     </tr>

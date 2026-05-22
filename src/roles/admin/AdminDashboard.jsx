@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Users, Building2, Receipt, UserCog, Plus, Upload } from "lucide-react";
 import { Link } from "react-router-dom";
+import API from "../../config/api";
 
 export default function AdminDashboard() {
   const [dashboardData, setDashboardData] = useState({
@@ -13,7 +14,7 @@ export default function AdminDashboard() {
       totalFeeSections: 0,
     }
   });
-  const API = "https://mess-management-system-q6us.onrender.com"
+  //const API = "https://mess-management-system-q6us.onrender.com"
   //const API = "http://localhost:8000"
 
 

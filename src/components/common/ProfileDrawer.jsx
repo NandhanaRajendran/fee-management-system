@@ -3,7 +3,7 @@ import { C } from "../../utils/constants";
 import { useWindowWidth } from "../../hooks/useWindowWidth";
 import { XIcon } from "../icons";
 
-export function ProfileDrawer({ open, onClose }) {
+export function ProfileDrawer({ open, onClose, messBills }) {
   const w = useWindowWidth();
   const drawerW = w < 480 ? "100vw" : "360px";
   
@@ -59,6 +59,21 @@ export function ProfileDrawer({ open, onClose }) {
             <div style={{ fontSize:10, color:C.muted, fontWeight:600, textTransform:"uppercase", letterSpacing:".6px", marginBottom:3 }}>Status</div>
             <span style={{ display:"inline-flex", alignItems:"center", gap:5, padding:"3px 10px", borderRadius:20, background:C.greenBg, color:C.green, border:`1px solid ${C.greenBorder}`, fontSize:12, fontWeight:600 }}>● Active</span>
           </div>
+          {messBills && messBills.length > 0 && (
+            <div style={{ gridColumn: "1/-1", marginTop: 8 }}>
+              <div style={{ fontSize: 11, fontWeight: 700, color: C.accent, textTransform: "uppercase", letterSpacing: ".8px", marginBottom: 10, borderBottom: `1px solid ${C.border}`, paddingBottom: 4 }}>
+                Published Mess Bills
+              </div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                {messBills.map((bill, idx) => (
+                  <div key={idx} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", background: C.bg, padding: "8px 12px", borderRadius: 8, border: `1px solid ${C.border}` }}>
+                    <div style={{ fontSize: 13, fontWeight: 600, color: C.text }}>{bill.month}</div>
+                    <div style={{ fontSize: 13, fontWeight: 800, color: C.accent }}>₹{bill.amt.toLocaleString("en-IN")}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </>

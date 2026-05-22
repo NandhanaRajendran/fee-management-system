@@ -1,9 +1,10 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import Layout from "../../components/Layout";
 import AlertToast from "../../components/Alerttoast";
-
+import API from "../../config/api";
 //const API = "http://localhost:8000";
-const API = "https://mess-management-system-q6us.onrender.com";
+//const API = "http://localhost:8000";
+// const API = "https://mess-management-system-q6us.onrender.com";
 // Staff salary rules
 const STAFF_RULES = {
   "Cook Salary": { ratePerDay: 710, label: "Cook", maxDays: (dim) => dim - 1 },

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import "../../styles/principle.css";
 import { useNavigate } from "react-router-dom";
+import API from "../../config/api";
 
 const PrincipalDashboard = () => {
 
@@ -10,8 +11,10 @@ const PrincipalDashboard = () => {
   const [semester, setSemester] = useState("");
   const [search, setSearch] = useState("");
   const [dept, setDept] = useState("");
+  const [deptOptions, setDeptOptions] = useState([]);
+  const [semesterOptions, setSemesterOptions] = useState([]);
   const navigate = useNavigate();
-  const API = "https://mess-management-system-q6us.onrender.com"
+  //const API = "https://mess-management-system-q6us.onrender.com"
   //const API = "http://localhost:8000"
 
   useEffect(() => {
@@ -23,8 +26,35 @@ const PrincipalDashboard = () => {
           throw new Error("Failed to fetch students");
         }
         const data = await response.json();
+        console.log("FULL API DATA:", data);
+        console.log("STUDENTS:", data.students);
+        console.log("FIRST STUDENT:", data.students?.[0]);
         setStudents(data.students || []);
         setColumns(data.columns || []);
+        const uniqueDepartments = [
+          ...new Set(
+            (data.students || [])
+              .map((s) => s.department)
+              .filter(Boolean)
+          ),
+        ];
+
+        setDeptOptions(uniqueDepartments);
+        const uniqueSemesters = [
+          ...new Set(
+            data.students
+              ?.filter((s) => s.className)
+              ?.map((s) => s.className)
+          ),
+        ];
+
+        console.log("SEMESTERS:", uniqueSemesters);
+
+        setSemesterOptions(uniqueSemesters);
+        console.log(
+          "CLASS NAMES:",
+          data.students.map((s) => s.className)
+        );
       } catch (error) {
         console.error("Error fetching principal dashboard data:", error);
       } finally {
@@ -36,8 +66,13 @@ const PrincipalDashboard = () => {
 
   const filteredStudents = students.filter((student) => {
     return (
-      (student.admission?.toLowerCase() || "").includes(search.toLowerCase()) &&
-      (student.department?.toLowerCase() || "").includes(dept.toLowerCase())
+      (student.admission?.toLowerCase() || "")
+        .includes(search.toLowerCase()) &&
+
+      (student.department?.toLowerCase() || "")
+        .includes(dept.toLowerCase()) &&
+
+      (!semester || student.className === semester)
     );
   });
 
@@ -95,12 +130,12 @@ const PrincipalDashboard = () => {
             onChange={(e) => setDept(e.target.value)}
           >
             <option value="">All Department</option>
-            <option value="CSE">CSE</option>
-            <option value="ECE">ECE</option>
-            <option value="ME">ME</option>
-            <option value="EEE">EEE</option>
-            <option value="IT">IT</option>
-            <option value="Robotics">Robotics</option>
+
+            {deptOptions.map((department) => (
+              <option key={department} value={department}>
+                {department}
+              </option>
+            ))}
           </select>
 
 
@@ -109,14 +144,12 @@ const PrincipalDashboard = () => {
             onChange={(e) => setSemester(e.target.value)}
           >
             <option value="">All Semester</option>
-            <option value="1">S1</option>
-            <option value="2">S2</option>
-            <option value="3">S3</option>
-            <option value="4">S4</option>
-            <option value="5">S5</option>
-            <option value="6">S6</option>
-            <option value="7">S7</option>
-            <option value="8">S8</option>
+
+            {semesterOptions.map((sem) => (
+              <option key={sem} value={sem}>
+                {sem}
+              </option>
+            ))}
           </select>
 
 

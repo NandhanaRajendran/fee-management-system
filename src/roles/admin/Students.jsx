@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import "../../styles/admin.css";
 
+import API from "../../config/api";
 
 const CLASSES = ["S1", "S3", "S5", "S7"];
 const BATCHES = ["2025", "2024", "2023", "2022"];
@@ -17,7 +18,7 @@ const BATCHES = ["2025", "2024", "2023", "2022"];
 export default function Students() {
   const [students, setStudents] = useState([]);
   const [departments, setDepartments] = useState([]);
-  const API = "https://mess-management-system-q6us.onrender.com"
+  //const API = "https://mess-management-system-q6us.onrender.com"
   //const API = "http://localhost:8000"
 
   //Fetch Students

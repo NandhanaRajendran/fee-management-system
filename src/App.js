@@ -8,6 +8,7 @@ import Dashboard from "./roles/messManager/Dashboard";
 import Attendance from "./roles/messManager/Attendance";
 import Expenses from "./roles/messManager/Expenses";
 import MessBill from "./roles/messManager/MessBill";
+import MessDueSheet from "./roles/messManager/DueSheet";
 
 
 import AdminDashboard from "./roles/admin/AdminDashboard";
@@ -36,6 +37,7 @@ import Student from "./roles/student/StudentDashboard";
 import Pta from "./roles/pta/PTADashboard";
 import Staffadvisor from "./roles/staffAdvisor/StaffAdvisorDashboard";
 import FeeSectionDashboard from "./roles/feeSection/feeSectionDashboard"
+import PrincipalDashboard from "./roles/principle/PrincipleDashboard";
 
 
 
@@ -51,6 +53,7 @@ function App() {
         <Route path="/mess/attendance" element={<Attendance />} />
         <Route path="/mess/expenses" element={<Expenses />} />
         <Route path="/mess/messbill" element={<MessBill />} />
+        <Route path="/mess/duesheet" element={<MessDueSheet />} />
 
 
         <Route path="/hostel/dashboard" element={<HostelDashboard />} />
@@ -66,6 +69,7 @@ function App() {
         <Route path="/pta/dashboard" element={<Pta />} />
         <Route path="staffadvisor/dashboard" element={<Staffadvisor />} />
         <Route path="/fee/dashboard" element={<FeeSectionDashboard />} />
+        <Route path="/principal-dashboard" element={<PrincipalDashboard />} />
 
         <Route path="/admin" element={<AdminLayout />}>
           <Route path="dashboard" element={<AdminDashboard />} />

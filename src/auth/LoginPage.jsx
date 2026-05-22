@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import "../styles/login.css";
+import API from "../config/api";
 export default function LoginPage() {
   const navigate = useNavigate();
 
@@ -9,9 +10,9 @@ export default function LoginPage() {
   const [error, setError] = useState("");
   const userRef = useRef(null);
   const passRef = useRef(null);
-  const API = "https://mess-management-system-q6us.onrender.com"
+  //const API = "https://mess-management-system-q6us.onrender.com"
   //const API = "http://localhost:8000"
-
+  
   useEffect(() => {
     const handleKeys = (e) => {
       // Space key to focus username (if not already focused or typing elsewhere)
@@ -82,7 +83,16 @@ export default function LoginPage() {
           navigate("/principal-dashboard");
           break;
         case "feeManager":
-          navigate("/fee/dashboard");
+          const usernameLower = data.user.username.toLowerCase();
+          if (usernameLower === "messmanager") {
+            navigate("/mess/dashboard");
+          } else if (usernameLower === "hostel") {
+            navigate("/hostel/dashboard");
+          } else if (usernameLower === "pta") {
+            navigate("/pta/dashboard");
+          } else {
+            navigate("/fee/dashboard");
+          }
           break;
         case "hostelManager":
           navigate("/hostel/dashboard");

@@ -3,13 +3,14 @@ import { Download, Upload, FileSpreadsheet, CheckCircle2, XCircle, Trash2 } from
 import * as XLSX from "xlsx";
 import "../../styles/admin.css";
 import { useStudents } from "../../context/StudentsContext";
+import API from "../../config/api";
 
 /*
   Expected Excel columns (case-insensitive, order doesn't matter):
   Name | Admission Number | Department | Batch | Class
 */
 
-const REQUIRED_FIELDS = ["name", "admission number", "department", "batch", "class"];
+const REQUIRED_FIELDS = ["name", "admission number","email", "department", "batch", "class","gender"];
 
 const normalizeKey = (key) => key?.toString().trim().toLowerCase();
 
@@ -22,9 +23,11 @@ const mapRow = (raw) => {
   return {
     name:       get("name"),
     admission:  get("admission number"),
+    email:      get("email"),
     department: get("department"),
     batch:      get("batch"),
     class:      get("class"),
+    gender:     get("gender"),
   };
 };
 
@@ -33,17 +36,19 @@ const validateRow = (row) => {
   const errors = [];
   if (!row.name)       errors.push("Name missing");
   if (!row.admission)  errors.push("Admission number missing");
+  if(!row.email)       errors.push("Email missing");
   if (!row.department) errors.push("Department missing");
   if (!row.batch)      errors.push("Batch missing");
   if (!row.class)      errors.push("Class missing");
+  if(!row.gender)     errors.push("Gender missing");
   return errors;
 };
 
 const SAMPLE_ROWS = [
-  ["Name", "Admission Number", "Department", "Batch", "Class"],
-  ["Arjun Nair",   "5001", "Computer Science",       "2025", "S1"],
-  ["Priya Menon",  "5002", "Electrical Engineering", "2025", "S1"],
-  ["Rahul Verma",  "5003", "Robotics",               "2025", "S1"],
+  ["Name", "Admission Number", "Email", "Department", "Batch", "Class","Gender"],
+  ["Arjun Nair",   "5001", "[EMAIL_ADDRESS]", "Computer Science",       "2025", "S1","Male"],
+  ["Priya Menon",  "5002", "[EMAIL_ADDRESS]", "Electrical Engineering", "2025", "S1","Female"],
+  ["Rahul Verma",  "5003", "[EMAIL_ADDRESS]", "Robotics",               "2025", "S1","Male"],
 ];
 
 export default function BulkEnrollment() {
@@ -140,11 +145,67 @@ export default function BulkEnrollment() {
   const validRows = preview?.rows.filter((r) => r.status === "valid") ?? [];
   const errorRows = preview?.rows.filter((r) => r.status === "error") ?? [];
 
-  const handleImport = () => {
+  const handleImport = async () => {
     if (validRows.length === 0) { alert("No valid rows to import"); return; }
-    bulkAddStudents(validRows);
-    setImportedCount(validRows.length);
-    setImported(true);
+    
+    //const API = "https://mess-management-system-q6us.onrender.com";
+
+    try {
+      // 1. Fetch departments to map names to IDs
+      const deptRes = await fetch(`${API}/api/admin/departments`);
+      const departments = await deptRes.json();
+      
+      let successCount = 0;
+      let failCount = 0;
+      let errorMessages = [];
+
+      // 2. Loop through valid rows and call existing add-student endpoint
+      for (const row of validRows) {
+        // Find matching department ID
+        const dept = departments.find(d => d.name.toLowerCase() === row.department.toLowerCase());
+        
+        if (!dept) {
+          failCount++;
+          errorMessages.push(`Row ${row.admission}: Department "${row.department}" not found in system.`);
+          continue;
+        }
+
+        const studentData = {
+          name: row.name,
+          admissionNo: row.admission,
+          email: row.email,
+          department: dept._id,
+          className: row.class,
+          batch: row.batch,
+          gender: row.gender || "Other"
+        };
+
+        const response = await fetch(`${API}/api/admin/add-student`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(studentData),
+        });
+
+        if (response.ok) {
+          successCount++;
+        } else {
+          const data = await response.json();
+          failCount++;
+          errorMessages.push(`Row ${row.admission}: ${data.message || "Failed to save"}`);
+        }
+      }
+      
+      setImportedCount(successCount);
+      setImported(true);
+      bulkAddStudents(validRows); // Sync with context
+
+      if (failCount > 0) {
+        alert(`Finished with ${successCount} successes and ${failCount} failures.\n\n${errorMessages.join("\n")}`);
+      }
+    } catch (error) {
+      console.error(error);
+      alert("Error connecting to server.");
+    }
   };
 
   /* ── download sample template ── */
@@ -250,6 +311,7 @@ export default function BulkEnrollment() {
                   <th>DEPARTMENT</th>
                   <th>BATCH</th>
                   <th>CLASS</th>
+                  <th>GENDER</th>
                   <th>STATUS</th>
                 </tr>
               </thead>
@@ -262,6 +324,7 @@ export default function BulkEnrollment() {
                     <td>{row.department || <span className="bulk-missing">Missing</span>}</td>
                     <td>{row.batch || <span className="bulk-missing">Missing</span>}</td>
                     <td>{row.class || <span className="bulk-missing">Missing</span>}</td>
+                    <td>{row.gender || <span className="bulk-missing">Other</span>}</td>
                     <td>
                       {row.status === "valid" ? (
                         <span className="status active">Valid</span>

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import "../../styles/hostel.css";
+import API from "../../config/api";
 
 function Enrollment() {
   const navigate = useNavigate();
@@ -12,13 +13,19 @@ function Enrollment() {
   const [name, setName] = useState("");
   const [department, setDepartment] = useState("");
   const [semester, setSemester] = useState("");
-  const [gender, setGender] = useState("");
+  const [gender,setGender] = useState("Female");
   const [isAutoFilled, setIsAutoFilled] = useState(false);
 
-  const API = "https://mess-management-system-q6us.onrender.com"
-  //const API = "http://localhost:8000"
+  // Dropdown list states
+  const [femaleStudents, setFemaleStudents] = useState([]);
+  const [femaleFaculty, setFemaleFaculty] = useState([]);
+  const [selectedId, setSelectedId] = useState("");
+  const [searchText, setSearchText] = useState("");
+  const [showDropdown, setShowDropdown] = useState(false);
 
-  // Fetch departments on mount
+  //const API = "https://mess-management-system-q6us.onrender.com";
+
+  // Fetch departments
   useEffect(() => {
     fetch(`${API}/api/admin/departments`)
       .then(res => res.json())
@@ -26,76 +33,105 @@ function Enrollment() {
       .catch(err => console.error("Error fetching departments:", err));
   }, []);
 
-  const handleIdBlur = async (e) => {
-    const id = e.target.value.trim();
-    if (!id) return;
-
-    setIsAutoFilled(false);
-    setMessage("");
-
-    try {
-      // Always check if they are already in the hostel (Inmate collection)
-      const resInmate = await fetch(`${API}/api/students/admission/${id}`);
-      if (resInmate.ok) {
-        const data = await resInmate.json();
-        if (data.hostelName) {
-          setMessage(`Error: ${data.name} is already enrolled in ${data.hostelName}.`);
-          setName("");
-          setDepartment("");
-          setSemester("");
-          setGender("");
-          return;
-        }
-
-        // If they exist but ENROLLMENT isn't complete (no hostel), auto-fill for Student category
-        if (category === "Student") {
-          setName(data.name || "");
-          setDepartment(data.department?._id || data.department?.name || "");
-          setSemester(data.className || "");
-          setGender(data.gender || "Other");
-          setIsAutoFilled(true);
-          return;
-        }
-      }
-
-      // If not in inmate collection or category is Faculty, check Faculty collection
-      if (category === "Faculty") {
-        const resFac = await fetch(`${API}/api/admin/faculty/id/${id}`);
-        if (resFac.ok) {
-          const data = await resFac.json();
-          setName(data.name || "");
-          setDepartment(data.department?._id || data.department?.name || "");
-          setGender(""); // Faculty gender might not be in DB
-          setIsAutoFilled(true);
-        } else {
-          setName("");
-          setDepartment("");
-          setMessage("Faculty not found in DB. Please enter details manually.");
-        }
-      } else if (category === "Student") {
-        // We already tried Student fetch above and it failed if we are here
-        setName("");
-        setDepartment("");
-        setMessage("Student not found in DB. Please enter details manually.");
-      }
-    } catch (err) {
-      console.error(err);
+  // Fetch female students
+  useEffect(() => {
+    if (category === "Student") {
+      setSelectedId("");
+      setName("");
+      setDepartment("");
+      setSemester("");
+      setIsAutoFilled(false);
+      fetch(`${API}/api/admin/all-students`, {
+        headers: {
+          Authorization: `Bearer ${sessionStorage.getItem("token")}`,
+        },
+      })
+        .then(res => res.json())
+        .then(data => {
+          const females = Array.isArray(data)
+            ? data.filter(s => s.gender === "Female")
+            : [];
+          setFemaleStudents(females);
+        })
+        .catch(console.error);
     }
+  }, [category]);
+
+  // Fetch female faculty
+  useEffect(() => {
+    if (category === "Faculty") {
+      setSelectedId("");
+      setName("");
+      setDepartment("");
+      setSemester("");
+      setIsAutoFilled(false);
+      fetch(`${API}/api/admin/faculty`, {
+        headers: { Authorization: `Bearer ${sessionStorage.getItem("token")}` },
+      })
+        .then(res => res.json())
+        .then(data => {
+          const females = Array.isArray(data)
+            ? data.filter(f => f.gender === "Female")
+            : [];
+          setFemaleFaculty(females);
+        })
+        .catch(console.error);
+    }
+  }, [category]);
+
+  // Get matching list based on category + search
+  const getFilteredList = () => {
+    const list = category === "Student" ? femaleStudents : femaleFaculty;
+    if (!searchText) return list;
+    const q = searchText.toLowerCase();
+    return list.filter(
+      item =>
+        item.name.toLowerCase().includes(q) ||
+        (
+          item.admissionNo ||
+          item.admission ||
+          item.facultyId ||
+          ""
+        )
+          .toLowerCase()
+          .includes(q)
+    );
+  };
+
+  const handleSelect = (item) => {
+    const id =
+      item.admissionNo ||
+      item.admission ||
+      item.facultyId ||
+      "";
+    setSelectedId(id);
+    setSearchText(item.name + (id ? ` (${id})` : ""));
+    setShowDropdown(false);
+    setName(item.name || "");
+    setDepartment(item.department?._id || item.department || "");
+    setSemester(item.className || "");
+    setGender("Female");
+    setIsAutoFilled(true);
+    setMessage("");
   };
 
   const handleCategoryChange = (e) => {
-    setCategory(e.target.value);
+    const val = e.target.value;
+    setCategory(val);
     setName("");
     setDepartment("");
     setSemester("");
-    setGender("");
+    setGender("Female");
     setIsAutoFilled(false);
+    setSelectedId("");
+    setSearchText("");
+    setShowDropdown(false);
+    setMessage("");
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     const formData = new FormData(e.target);
-    const admission = formData.get("admission"); // or Faculty ID
     const room = formData.get("room");
 
     if (category === "Inmate type") {
@@ -103,26 +139,36 @@ function Enrollment() {
       return;
     }
 
+    if ((category === "Student" || category === "Faculty") && !selectedId) {
+      setMessage("Error: Please select a person from the dropdown.");
+      return;
+    }
+
     try {
-      // 1. Fetch current students to check room capacity
+      // Check room capacity
       const resCount = await fetch(`${API}/api/students`);
       const allStudents = await resCount.json();
-
       if (Array.isArray(allStudents)) {
-        const inRoom = allStudents.filter(s =>
-          String(s.room) === String(room)
-          // Intentionally omitted hostelName capacity check since it's temporarily disabled
-        );
-
+        const inRoom = allStudents.filter(s => String(s.room) === String(room));
         if (inRoom.length >= 4) {
           setMessage("Error: Maximum 4 people allowed in this room.");
           return;
         }
       }
 
-      // 2. Prepare data
+      const alreadyExists = allStudents.find(
+        s =>
+          String(s.admissionNo || s.admission) === String(selectedId) &&
+          s.hostelName && s.hostelName.trim() !== ""
+      );
+      
+      if (alreadyExists) {
+        setMessage("Error: This inmate is already enrolled.");
+        return;
+      }
+
+      const finalAdmission = selectedId || Math.floor(Math.random() * 90000000) + 10000000;
       const finalName = category === "Student" ? name : `${category}: ${name}`;
-      const finalAdmission = admission || Math.floor(Math.random() * 90000000) + 10000000;
 
       const newInmate = {
         admission: finalAdmission,
@@ -131,11 +177,10 @@ function Enrollment() {
         category: category,
         department: department,
         className: semester,
-        gender: gender,
+        gender: "Female",
         hostelName: formData.get("hostelName") || ""
       };
 
-      // 3. Enroll
       const res = await fetch(`${API}/api/students/enroll-hostel`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -148,10 +193,12 @@ function Enrollment() {
         setName("");
         setDepartment("");
         setSemester("");
-        setGender("");
+        setGender("Female");
         setIsAutoFilled(false);
+        setSelectedId("");
+        setSearchText("");
       } else {
-        setMessage(`Error: ${data.message || "Failed to enroll student."}`);
+        setMessage(`Error: ${data.message || "Failed to enroll."}`);
       }
     } catch (err) {
       console.error(err);
@@ -159,8 +206,11 @@ function Enrollment() {
     }
   };
 
+  const showPersonSelect = category === "Student" || category === "Faculty";
+  const personList = getFilteredList();
+
   return (
-    <div className="hostelPage" style={{ userSelect: 'none' }}>
+    <div className="hostelPage" style={{ userSelect: "none" }}>
       <div className="formPage">
         <div className="formCard">
           <div className="formHeader">
@@ -171,21 +221,18 @@ function Enrollment() {
             >
               Back
             </button>
-
             <h2>Enroll New Inmate</h2>
           </div>
 
           <form onSubmit={handleSubmit}>
-            {(category === "Student" || category === "Faculty" || category === "Supple Exam") && (
-              <input
-                name="admission"
-                placeholder={category === "Faculty" ? "Faculty ID" : "Admission Number"}
-                onBlur={handleIdBlur}
-                required
-              />
-            )}
-
-            <select name="category" value={category} onChange={handleCategoryChange} required style={{ marginBottom: '15px' }}>
+            {/* Category Selector */}
+            <select
+              name="category"
+              value={category}
+              onChange={handleCategoryChange}
+              required
+              style={{ marginBottom: "15px" }}
+            >
               <option value="Inmate type">Inmate type</option>
               <option value="Student">Student</option>
               <option value="Faculty">Faculty</option>
@@ -194,6 +241,73 @@ function Enrollment() {
               <option value="Supple Exam">Supplementary Exam</option>
             </select>
 
+            {/* Searchable Female Person Dropdown */}
+            {showPersonSelect && (
+              <div style={{ position: "relative", marginBottom: "15px" }}>
+                <input
+                  type="text"
+                  placeholder={`Search female ${category === "Faculty" ? "faculty" : "student"} by name or ID…`}
+                  value={searchText}
+                  onChange={(e) => {
+                    setSearchText(e.target.value);
+                    setShowDropdown(true);
+                    setIsAutoFilled(false);
+                    setSelectedId("");
+                  }}
+                  onFocus={() => setShowDropdown(true)}
+                  autoComplete="off"
+                  style={{ width: "100%", boxSizing: "border-box" }}
+                />
+                {showDropdown && searchText && (
+                  <div
+                    style={{
+                      position: "absolute",
+                      top: "100%",
+                      left: 0,
+                      right: 0,
+                      background: "#fff",
+                      border: "1px solid #e2e8f0",
+                      borderRadius: "8px",
+                      boxShadow: "0 4px 16px rgba(0,0,0,0.10)",
+                      zIndex: 999,
+                      maxHeight: "220px",
+                      overflowY: "auto",
+                    }}
+                  >
+                    {personList.length === 0 ? (
+                      <div style={{ padding: "12px 16px", color: "#94a3b8", fontSize: "0.9rem" }}>
+                        No female {category === "Faculty" ? "faculty" : "students"} found
+                      </div>
+                    ) : (
+                      personList.map((item) => {
+                        const id = item.admissionNo || item.admission || item.facultyId || "";
+                        return (
+                          <div
+                            key={item._id}
+                            onMouseDown={() => handleSelect(item)}
+                            style={{
+                              padding: "10px 16px",
+                              cursor: "pointer",
+                              borderBottom: "1px solid #f1f5f9",
+                              fontSize: "0.9rem",
+                              display: "flex",
+                              justifyContent: "space-between",
+                            }}
+                            onMouseEnter={(e) => e.currentTarget.style.background = "#f8fafc"}
+                            onMouseLeave={(e) => e.currentTarget.style.background = "#fff"}
+                          >
+                            <span style={{ fontWeight: 500 }}>{item.name}</span>
+                            <span style={{ color: "#64748b" }}>{id}</span>
+                          </div>
+                        );
+                      })
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Name (auto-filled, read-only after selection) */}
             <input
               name="name"
               placeholder="Name"
@@ -203,26 +317,13 @@ function Enrollment() {
               required
             />
 
-            {!isAutoFilled ? (
-              <select
-                name="gender"
-                value={gender}
-                onChange={(e) => setGender(e.target.value)}
-                required
-                style={{ marginBottom: '15px' }}
-              >
-                <option value="">Select Gender</option>
-                <option value="Male">Male</option>
-                <option value="Female">Female</option>
-                <option value="Other">Other</option>
-              </select>
-            ) : (
-              <div style={{ marginBottom: '15px', color: '#64748b', fontSize: '0.9rem' }}>
-                Gender: <strong>{gender}</strong>
-              </div>
-            )}
+            {/* Gender: always Female for hostel, just display it */}
+            <div style={{ marginBottom: "15px", color: "#64748b", fontSize: "0.9rem" }}>
+              Gender: <strong style={{ color: "#ec4899" }}>Female</strong>
+            </div>
 
-            {(category === "Student" || category === "Faculty" || category === "Supple Exam") && (
+            {/* Department */}
+            {showPersonSelect && (
               <select
                 name="department"
                 value={department}
@@ -237,6 +338,7 @@ function Enrollment() {
               </select>
             )}
 
+            {/* Semester (students only) */}
             {category === "Student" && (
               <select
                 name="semester"
@@ -246,31 +348,17 @@ function Enrollment() {
                 required
               >
                 <option value="">Select Semester</option>
-                <option value="S1">Semester 1</option>
-                <option value="S2">Semester 2</option>
-                <option value="S3">Semester 3</option>
-                <option value="S4">Semester 4</option>
-                <option value="S5">Semester 5</option>
-                <option value="S6">Semester 6</option>
-                <option value="S7">Semester 7</option>
-                <option value="S8">Semester 8</option>
+                {["S1", "S2", "S3", "S4", "S5", "S6", "S7", "S8"].map(s => (
+                  <option key={s} value={s}>Semester {s.slice(1)}</option>
+                ))}
               </select>
             )}
 
-            {gender === "Male" ? (
-              <p style={{ color: "#ef4444", fontSize: "0.85rem", marginBottom: "15px", fontWeight: "bold" }}>
-                No mens hostels are available now
-              </p>
-            ) : (
-              <select name="hostelName" required style={{ marginBottom: "15px" }}>
-                <option value="">Select Hostel</option>
-                <option value="Nila Ladies Hostel">Nila Ladies Hostel</option>
-                {/* Other hostels disabled for now
-                <option value="Kabani Ladies Hostel">Kabani Ladies Hostel</option>
-                <option value="Mens Hostel">Mens Hostel</option>
-                */}
-              </select>
-            )}
+            {/* Hostel Selector */}
+            <select name="hostelName" required style={{ marginBottom: "15px" }}>
+              <option value="">Select Hostel</option>
+              <option value="Nila Ladies Hostel">Nila Ladies Hostel</option>
+            </select>
 
             <input
               name="enrollmentDate"
@@ -279,14 +367,23 @@ function Enrollment() {
               onFocus={(e) => (e.target.type = "date")}
               onBlur={(e) => (e.target.type = "text")}
               required
-              style={{ marginTop: '15px' }}
+              style={{ marginTop: "15px" }}
             />
             <input name="room" placeholder="Room Number" required />
 
-            <button className="submitBtn" onMouseDown={(e) => e.preventDefault()}>Enroll Inmate</button>
+            <button className="submitBtn" onMouseDown={(e) => e.preventDefault()}>
+              Enroll Inmate
+            </button>
           </form>
 
-          {message && <p className="successMsg" style={{ color: message.includes("Error") ? "red" : "green" }}>{message}</p>}
+          {message && (
+            <p
+              className="successMsg"
+              style={{ color: message.includes("Error") ? "red" : "green" }}
+            >
+              {message}
+            </p>
+          )}
         </div>
       </div>
     </div>

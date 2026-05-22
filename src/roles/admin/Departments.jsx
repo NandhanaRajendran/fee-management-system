@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import API from "../../config/api";
 import {
   Plus,
   Pencil,
@@ -22,7 +23,7 @@ export default function Departments() {
   const [hodCredentials, setHodCredentials] = useState({});
   const [advisorCredentials, setAdvisorCredentials] = useState({});
   //const API = "http://localhost:8000";
-  const API = "https://mess-management-system-q6us.onrender.com"; // ← uncomment for production
+  //const API = "https://mess-management-system-q6us.onrender.com"; // ← uncomment for production
 
   useEffect(() => {
     fetch(`${API}/api/admin/departments`)

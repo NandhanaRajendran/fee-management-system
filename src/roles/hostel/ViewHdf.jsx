@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import "../../styles/manual.css";
+import API from "../../config/api";
 
 const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-const API = "https://mess-management-system-q6us.onrender.com"
+//const API = "https://mess-management-system-q6us.onrender.com"
 //const API = "http://localhost:8000"
 
 function PublishHDF() {
@@ -22,34 +23,21 @@ function PublishHDF() {
         const monthIndex = months.indexOf(selectedMonth);
         const targetYear = Number(selectedYear);
 
-        if (targetYear === 2026 && monthIndex > 5) {
-          setStudents([]);
-          return;
-        }
 
-        const mapped = studentArray.filter(s => {
-          const admissionYear = parseInt(String(s.admissionNo).substring(0, 4));
-          if (isNaN(admissionYear)) return false;
-          if (targetYear === 2026 && (admissionYear === 2022 || admissionYear === 2024)) return false;
-          return targetYear >= admissionYear && targetYear < admissionYear + 4;
-        }).map(s => {
-          const admissionYear = parseInt(String(s.admissionNo).substring(0, 4));
-          const monthsOffset = (targetYear - admissionYear) * 12;
-          const totalPaid = s.hdfPaidMonths || 0;
-          let paidThisYear = totalPaid - monthsOffset;
-          if (paidThisYear < 0) paidThisYear = 0;
-          if (paidThisYear > 12) paidThisYear = 12;
-          const isRecentlyPublished = s.feeUpdatedAt ? (new Date() - new Date(s.feeUpdatedAt)) / (1000 * 60 * 60 * 24) < 10 : false;
-          const isNotYetPending = (monthIndex === (targetYear === 2026 ? 5 : 11)) && isRecentlyPublished;
-          const isDue = monthIndex >= paidThisYear && !isNotYetPending;
-          return {
+
+        const mapped = studentArray
+          .filter(s =>
+            s.hostelName &&
+            s.room &&
+            s.HDF &&
+            s.hdfMonth === selectedMonth
+          )
+          .map(s => ({
             id: s.admissionNo,
             name: s.name,
             month: selectedMonth,
-            hdf: Math.round((s.HDF || 750) / 6),
-            isDue: isDue
-          };
-        }).filter(s => s.isDue);
+            hdf: s.HDF
+          }));
 
         setStudents(mapped);
       })

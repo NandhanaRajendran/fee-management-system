@@ -11,7 +11,7 @@ const studentSchema = new mongoose.Schema(
       type: String,
       required: true,
       unique: true,
-      match: /^[1-9][0-9]{3,}$/,
+      match: /^[0-9]{3,}$/,
     },
 
     department: {
@@ -59,12 +59,30 @@ const studentSchema = new mongoose.Schema(
       type: [
         {
           date: String,
-          present: { type: Boolean, default: true },
-          messCut: { type: Boolean, default: false },
+
+          present: {
+            type: Boolean,
+            default: true
+          },
+
+          messCut: {
+            type: Boolean,
+            default: false
+          },
+
+          milk: {
+            type: Boolean,
+            default: false
+          }
         },
       ],
       default: [],
     },
+    hostelEnrollmentDate: {
+      type: Date,
+      default: null,
+    },
+
   },
   { timestamps: true },
 );

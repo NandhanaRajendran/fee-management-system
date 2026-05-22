@@ -31,6 +31,11 @@ const facultySchema = new mongoose.Schema({
     role: {
         type: String,
         default: "faculty"
+    },
+    gender: {
+        type: String,
+        enum: ["Male", "Female", "Other"],
+        default: "Other",
     }
 
 }, { timestamps: true });

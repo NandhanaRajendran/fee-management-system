@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
-
+import API from "../../config/api";
 /* ─── COLORS (matches HOD/Admin style) ─── */
 const C = {
   sky50: "#f0f9ff", sky100: "#e0f2fe", sky200: "#bae6fd",
@@ -161,7 +161,7 @@ const Icon = {
   ),
 };
 
-  const API = "https://mess-management-system-q6us.onrender.com"
+  //const API = "https://mess-management-system-q6us.onrender.com"
   //const API = "http://localhost:8000"
 /* ─── ADD FEE TAB ─── */
 function AddFeeTab({ toast, feeSectionInfo }) {

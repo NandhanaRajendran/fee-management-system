@@ -2,6 +2,7 @@ import { useState, useMemo, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
+import API from "../../config/api";
 
 const FINE_CATS = [
   "Dept.Library Fine",
@@ -567,7 +568,7 @@ function Modal({ open, title, onClose, children, footer }) {
   );
 }
 
-const API = "https://mess-management-system-q6us.onrender.com"
+//const API = "https://mess-management-system-q6us.onrender.com"
 //const API = "http://localhost:8000"
 
 /* ─────────────────────────────────────────────
@@ -1023,6 +1024,7 @@ function FeeManagement({
                 />
               </FormGroup>
             </div>
+            <div style={{ paddingBottom: "120px" }}>
             <TableWrap>
               <thead>
                 <tr>
@@ -1077,6 +1079,7 @@ function FeeManagement({
                 )}
               </tbody>
             </TableWrap>
+            </div>
             <div
               style={{
                 display: "flex",
@@ -1683,8 +1686,8 @@ function DueSheet({ toast, dueData, dueSections, sems }) {
 
   const totalDue = rows.reduce((a, r) => a + r.total, 0);
   const withDue = rows.filter((r) => r.total > 0).length;
-  const clearCount = rows.length - withDue;
-  const rate = rows.length ? Math.round((clearCount / rows.length) * 100) : 0;
+ //const clearCount = rows.length - withDue;
+  //const rate = rows.length ? Math.round((clearCount / rows.length) * 100) : 0;
 
   // Calculate dynamic totals for each section
   const sectionTotals = {};
@@ -1967,10 +1970,22 @@ function DueSheet({ toast, dueData, dueSections, sems }) {
       {/* Summary cards */}
       <div
         style={{
+          position: "sticky",
+          bottom: 0,
+          zIndex: 50,
+
           display: "grid",
           gridTemplateColumns: "repeat(4,1fr)",
           gap: 12,
+
           marginTop: 20,
+          padding: "14px",
+
+          background: "rgba(255,255,255,0.92)",
+          backdropFilter: "blur(10px)",
+
+          borderTop: `1px solid ${C.sky200}`,
+          boxShadow: "0 -4px 18px rgba(0,0,0,0.06)",
         }}
       >
         {[
@@ -1981,7 +1996,7 @@ function DueSheet({ toast, dueData, dueSections, sems }) {
             value: `₹${totalDue.toLocaleString()}`,
             col: C.red500,
           },
-          { label: "Collection Rate", value: `${rate}%`, col: "#0d9488" },
+          //{ label: "Collection Rate", value: `${rate}%`, col: "#0d9488" },
         ].map(({ label, value, col }) => (
           <div
             key={label}

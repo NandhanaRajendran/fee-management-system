@@ -20,19 +20,27 @@ const C = {
 };
 
 const CAT_STYLE = {
-  Academic:  { bg:"#eff6ff", color:"#1d4ed8", border:"#bfdbfe" },
-  Hostel:    { bg:"#f0fdf4", color:"#166534", border:"#bbf7d0" },
-  Library:   { bg:"#fdf4ff", color:"#7e22ce", border:"#e9d5ff" },
-  Sports:    { bg:"#fff7ed", color:"#c2410c", border:"#fed7aa" },
-  PTA:       { bg:"#ecfeff", color:"#0e7490", border:"#a5f3fc" },
-  Transport: { bg:"#f0fdf4", color:"#15803d", border:"#bbf7d0" },
+  Academic: { bg: "#eff6ff", color: "#1d4ed8", border: "#bfdbfe" },
+  Hostel: { bg: "#f0fdf4", color: "#166534", border: "#bbf7d0" },
+  Library: { bg: "#fdf4ff", color: "#7e22ce", border: "#e9d5ff" },
+  Sports: { bg: "#fff7ed", color: "#c2410c", border: "#fed7aa" },
+  PTA: { bg: "#ecfeff", color: "#0e7490", border: "#a5f3fc" },
+  Transport: { bg: "#f0fdf4", color: "#15803d", border: "#bbf7d0" },
 };
 
 /* ── helper to determine real status from fee object ── */
 function resolveStatus(f) {
   if (f.status === "paid") return "paid";
-  if (f.status === "pending_verification") return "pending_verification";
-  if (f.status === "overdue") return "overdue";
+
+  if (f.status === "draft")
+    return "draft";
+
+  if (f.status === "pending_verification")
+    return "pending_verification";
+
+  if (f.status === "overdue")
+    return "overdue";
+
   return f.status || "notpaid";
 }
 
@@ -43,7 +51,7 @@ function fmtCurrency(n) {
 /* ── build month pill list from fee array ── */
 function buildMonthPills(fees) {
   const monthSet = new Set(fees.map(f => f.month));
-  const MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+  const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
   const years = [...new Set(
     fees.map(f => f.month).filter(m => m && m.includes(" ")).map(m => m.split(" ")[1])
   )].sort();
@@ -64,15 +72,23 @@ function buildMonthPills(fees) {
 /* ── sub-components ── */
 function StatusBadge({ status }) {
   const cfg = {
-    paid:                 { bg: C.greenBg, color: C.green,  border: C.greenBorder, label: "✓ Paid" },
-    notpaid:              { bg: C.goldBg,  color: C.gold,   border: C.goldBorder,  label: "⏱ Due" },
-    overdue:              { bg: C.redBg,   color: C.red,    border: C.redBorder,   label: "⚠ Overdue" },
-    pending_verification: { bg: C.orange+"22", color: C.orange, border: C.orange+"44", label: "⏳ Verifying" },
+    draft: {
+      bg: "#fef9c3",
+      color: "#854d0e",
+      border: "#fde68a",
+      label: "📝 Draft"
+    },
+    paid: { bg: C.greenBg, color: C.green, border: C.greenBorder, label: "✓ Paid" },
+    notpaid: { bg: C.goldBg, color: C.gold, border: C.goldBorder, label: "⏱ Due" },
+    overdue: { bg: C.redBg, color: C.red, border: C.redBorder, label: "⚠ Overdue" },
+    pending_verification: { bg: C.orange + "22", color: C.orange, border: C.orange + "44", label: "⏳ Verifying" },
   }[status] || { bg: C.goldBg, color: C.gold, border: C.goldBorder, label: "—" };
   return (
-    <span style={{ display:"inline-flex", alignItems:"center", gap:5, padding:"4px 10px",
-      borderRadius:20, background:cfg.bg, color:cfg.color, border:`1px solid ${cfg.border}`,
-      fontSize:11.5, fontWeight:700, whiteSpace:"nowrap" }}>
+    <span style={{
+      display: "inline-flex", alignItems: "center", gap: 5, padding: "4px 10px",
+      borderRadius: 20, background: cfg.bg, color: cfg.color, border: `1px solid ${cfg.border}`,
+      fontSize: 11.5, fontWeight: 700, whiteSpace: "nowrap"
+    }}>
       {cfg.label}
     </span>
   );
@@ -81,8 +97,10 @@ function StatusBadge({ status }) {
 function CatPill({ cat }) {
   const s = CAT_STYLE[cat] || CAT_STYLE.Academic;
   return (
-    <span style={{ display:"inline-block", padding:"3px 10px", borderRadius:20, fontSize:11,
-      fontWeight:600, background:s.bg, color:s.color, border:`1px solid ${s.border}`, whiteSpace:"nowrap" }}>
+    <span style={{
+      display: "inline-block", padding: "3px 10px", borderRadius: 20, fontSize: 11,
+      fontWeight: 600, background: s.bg, color: s.color, border: `1px solid ${s.border}`, whiteSpace: "nowrap"
+    }}>
       {cat}
     </span>
   );
@@ -94,12 +112,14 @@ function PayNowBtn({ overdue, onClick }) {
     <button
       onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)}
       onClick={onClick}
-      style={{ padding:"7px 16px", borderRadius:8, border:"none", fontFamily:"inherit",
+      style={{
+        padding: "7px 16px", borderRadius: 8, border: "none", fontFamily: "inherit",
         background: overdue ? `linear-gradient(135deg,${C.red},${C.orange})` : C.accent,
-        color:"#fff", fontWeight:700, fontSize:12.5, cursor:"pointer",
+        color: "#fff", fontWeight: 700, fontSize: 12.5, cursor: "pointer",
         transform: hov ? "scale(1.04)" : "none",
-        boxShadow: hov ? (overdue?"0 4px 12px rgba(220,38,38,.3)":"0 4px 12px rgba(37,99,235,.3)") : "none",
-        transition:"all .18s", whiteSpace:"nowrap" }}>
+        boxShadow: hov ? (overdue ? "0 4px 12px rgba(220,38,38,.3)" : "0 4px 12px rgba(37,99,235,.3)") : "none",
+        transition: "all .18s", whiteSpace: "nowrap"
+      }}>
       Pay Now
     </button>
   );
@@ -108,18 +128,20 @@ function PayNowBtn({ overdue, onClick }) {
 function MonthFilterPill({ pill, selected, feeStatus, onClick }) {
   const [hov, setHov] = useState(false);
   const { val, label } = pill;
-  const DOT = { overdue:"#dc2626", notpaid:"#d97706", pending_verification:"#ea580c", paid:"#16a34a" };
+  const DOT = { overdue: "#dc2626", notpaid: "#d97706", pending_verification: "#ea580c", paid: "#16a34a" };
   let bg = C.bg, color = C.muted, border = C.border;
   if (selected) { bg = C.accent; color = "#fff"; border = C.accent; }
   else if (hov && val !== "all") { bg = C.accentLight; color = C.accent; border = C.accent; }
   return (
     <div onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)} onClick={onClick}
-      style={{ position:"relative", padding:"6px 14px", borderRadius:20, fontSize:11.5,
-        fontWeight:600, cursor:"pointer", border:`1.5px solid ${border}`, background:bg, color,
-        transition:"all .18s", whiteSpace:"nowrap", display:"flex", alignItems:"center", gap:6 }}>
+      style={{
+        position: "relative", padding: "6px 14px", borderRadius: 20, fontSize: 11.5,
+        fontWeight: 600, cursor: "pointer", border: `1.5px solid ${border}`, background: bg, color,
+        transition: "all .18s", whiteSpace: "nowrap", display: "flex", alignItems: "center", gap: 6
+      }}>
       {label}
       {feeStatus && val !== "all" && (
-        <span style={{ width:7, height:7, borderRadius:"50%", background: DOT[feeStatus] || "transparent", flexShrink:0 }} />
+        <span style={{ width: 7, height: 7, borderRadius: "50%", background: DOT[feeStatus] || "transparent", flexShrink: 0 }} />
       )}
     </div>
   );
@@ -145,22 +167,24 @@ function openReceipt(receiptUrl) {
 
 /* ── desktop table ── */
 function FeeTableDesktop({ rows, onPayNow }) {
-  const th = { padding:"12px 14px", textAlign:"left", fontSize:11, fontWeight:700,
-    color:C.muted, textTransform:"uppercase", letterSpacing:".6px", whiteSpace:"nowrap", background:C.bg };
+  const th = {
+    padding: "12px 14px", textAlign: "left", fontSize: 11, fontWeight: 700,
+    color: C.muted, textTransform: "uppercase", letterSpacing: ".6px", whiteSpace: "nowrap", background: C.bg
+  };
   return (
-    <div style={{ overflowX:"auto" }}>
-      <table style={{ width:"100%", borderCollapse:"collapse", minWidth:750 }}>
+    <div style={{ overflowX: "auto" }}>
+      <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 750 }}>
         <thead>
-          <tr style={{ borderBottom:`1.5px solid ${C.border}` }}>
-            {["Fee Type","Category","Amount","Published Date","Due Date","Status","Paid Date","Action"].map(h => (
+          <tr style={{ borderBottom: `1.5px solid ${C.border}` }}>
+            {["Fee Type", "Month", "Category", "Amount", "Published Date", "Due Date", "Status", "Paid Date", "Action"].map(h => (
               <th key={h} style={th}>{h}</th>
             ))}
           </tr>
         </thead>
         <tbody>
           {rows.length === 0
-            ? <tr><td colSpan={8} style={{ padding:"32px 14px", textAlign:"center", color:C.muted, fontSize:13 }}>No fees found for selected period.</td></tr>
-            : rows.map((f, i) => <FeeRowDesktop key={f.id} f={f} isLast={i===rows.length-1} onPayNow={onPayNow} />)
+            ? <tr><td colSpan={8} style={{ padding: "32px 14px", textAlign: "center", color: C.muted, fontSize: 13 }}>No fees found for selected period.</td></tr>
+            : rows.map((f, i) => <FeeRowDesktop key={f.id} f={f} isLast={i === rows.length - 1} onPayNow={onPayNow} />)
           }
         </tbody>
       </table>
@@ -171,13 +195,13 @@ function FeeTableDesktop({ rows, onPayNow }) {
 function FeeRowDesktop({ f, isLast, onPayNow }) {
   const [hov, setHov] = useState(false);
   const st = resolveStatus(f);
-  const td = { padding:"13px 14px", verticalAlign:"middle", borderBottom:isLast?"none":`1px solid ${C.border}` };
+  const td = { padding: "13px 14px", verticalAlign: "middle", borderBottom: isLast ? "none" : `1px solid ${C.border}` };
   return (
     <tr onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)}
-      style={{ background:hov?C.bg:C.white, transition:"background .15s" }}>
+      style={{ background: hov ? C.bg : C.white, transition: "background .15s" }}>
       <td style={td}>
         <div style={{ position: "relative", display: "inline-block" }}>
-          <span style={{ fontWeight:700, fontSize:13.5, color:C.text, cursor: f.remark ? "help" : "default" }}>
+          <span style={{ fontWeight: 700, fontSize: 13.5, color: C.text, cursor: f.remark ? "help" : "default" }}>
             {f.type}
           </span>
           {f.remark && hov && (
@@ -188,34 +212,102 @@ function FeeRowDesktop({ f, isLast, onPayNow }) {
               boxShadow: "0 4px 12px rgba(0,0,0,.15)", zIndex: 50, pointerEvents: "none",
               animation: "fadeIn .2s ease"
             }}>
-              <div style={{ fontWeight: 700, marginBottom: 2, fontSize: 10, color: C.accent }}>HOD REMARK:</div>
+              <div style={{ fontWeight: 700, marginBottom: 2, fontSize: 10, color: C.accent }}> REMARK:</div>
               {f.remark}
             </div>
           )}
         </div>
       </td>
-      <td style={td}><CatPill cat={f.cat} /></td>
-      <td style={td}><span style={{ fontSize:14, fontWeight:800, color:C.text }}>{fmtCurrency(f.amt)}</span></td>
-      <td style={td}><span style={{ fontSize:12.5, color:C.text2, fontWeight:500 }}>{f.pub}</span></td>
-      <td style={td}><span style={{ fontSize:12.5, color:st!=="paid"?C.red:C.text2, fontWeight:st!=="paid"?600:500 }}>{f.due}</span></td>
-      <td style={td}><StatusBadge status={st} /></td>
-      <td style={td}><span style={{ fontSize:12.5, color:C.text2 }}>{f.paidDate || "—"}</span></td>
       <td style={td}>
-        {st === "paid"
-          ? <span style={{ fontSize:12, color:C.muted2 }}>—</span>
-          : st === "pending_verification"
-            ? <div style={{ display:"flex", flexDirection:"column", gap:4 }}>
-                <span style={{ fontSize:12, color:C.muted2, fontWeight:600 }}>Waiting for verification from authority</span>
-                {f.receiptUrl && (
-                  <button onClick={() => openReceipt(f.receiptUrl)}
-                    style={{ background:"none", border:"none", padding:0, cursor:"pointer",
-                      fontSize:11, color:C.accent, textDecoration:"underline", textAlign:"left" }}>
-                    View Receipt ↗
-                  </button>
-                )}
-              </div>
-            : <PayNowBtn overdue={st==="overdue"} onClick={() => onPayNow(f.id)} />
-        }
+        <span style={{ fontSize: 13, fontWeight: 600, color: C.text2 }}>{f.month || "Current"}</span>
+      </td>
+      <td style={td}><CatPill cat={f.cat} /></td>
+      <td style={td}><span style={{ fontSize: 14, fontWeight: 800, color: C.text }}>{fmtCurrency(f.amt)}</span></td>
+      <td style={td}><span style={{ fontSize: 12.5, color: C.text2, fontWeight: 500 }}>{f.pub}</span></td>
+      <td style={td}><span style={{ fontSize: 12.5, color: st !== "paid" ? C.red : C.text2, fontWeight: st !== "paid" ? 600 : 500 }}>{f.due}</span></td>
+      <td style={td}><StatusBadge status={st} /></td>
+      <td style={td}><span style={{ fontSize: 12.5, color: C.text2 }}>{f.paidDate || "—"}</span></td>
+      <td style={td}>
+
+        {st === "paid" ? (
+
+          <span
+            style={{
+              fontSize: 12,
+              color: C.muted2
+            }}
+          >
+            —
+          </span>
+
+        ) : st === "draft" ? (
+
+          <button
+            onClick={() => onPayNow(f)}
+            style={{
+              padding: "7px 16px",
+              borderRadius: 8,
+              border: "none",
+              background: "#facc15",
+              color: "#78350f",
+              fontWeight: 700,
+              cursor: "pointer"
+            }}
+          >
+            Preview
+          </button>
+
+        ) : st === "pending_verification" ? (
+
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              gap: 4
+            }}
+          >
+
+            <span
+              style={{
+                fontSize: 12,
+                color: C.muted2,
+                fontWeight: 600
+              }}
+            >
+              Waiting for verification
+            </span>
+
+            {f.receiptUrl && (
+
+              <button
+                onClick={() => openReceipt(f.receiptUrl)}
+                style={{
+                  background: "none",
+                  border: "none",
+                  padding: 0,
+                  cursor: "pointer",
+                  fontSize: 11,
+                  color: C.accent,
+                  textDecoration: "underline",
+                  textAlign: "left"
+                }}
+              >
+                View Receipt ↗
+              </button>
+
+            )}
+
+          </div>
+
+        ) : (
+
+          <PayNowBtn
+            overdue={st === "overdue"}
+            onClick={() => onPayNow(f.id)}
+          />
+
+        )}
+
       </td>
     </tr>
   );
@@ -225,46 +317,75 @@ function FeeRowDesktop({ f, isLast, onPayNow }) {
 function FeeCardMobile({ f, onPayNow }) {
   const st = resolveStatus(f);
   return (
-    <div style={{ background:C.white, border:`1.5px solid ${C.border}`, borderRadius:12, padding:16,
-      display:"flex", flexDirection:"column", gap:10 }}>
-      <div style={{ display:"flex", alignItems:"flex-start", justifyContent:"space-between", gap:8 }}>
+    <div style={{
+      background: C.white, border: `1.5px solid ${C.border}`, borderRadius: 12, padding: 16,
+      display: "flex", flexDirection: "column", gap: 10
+    }}>
+      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 8 }}>
         <div style={{ position: "relative" }}>
-          <div style={{ fontSize:14, fontWeight:700, color:C.text }}>{f.type}</div>
+          <div style={{ fontSize: 14, fontWeight: 700, color: C.text }}>{f.type}</div>
           {f.remark && (
-            <div style={{ fontSize:11, color:C.muted, marginTop:2, background:C.bg, padding:"3px 8px", borderRadius:6, border:`1px solid ${C.border}` }}>
+            <div style={{ fontSize: 11, color: C.muted, marginTop: 2, background: C.bg, padding: "3px 8px", borderRadius: 6, border: `1px solid ${C.border}` }}>
               💡 {f.remark}
             </div>
           )}
         </div>
         <StatusBadge status={st} />
       </div>
-      <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:8 }}>
-        {[["Category", <CatPill cat={f.cat} />], ["Amount", <span style={{ fontSize:15, fontWeight:800, color:C.text }}>{fmtCurrency(f.amt)}</span>],
-          ["Published", <span style={{ fontSize:12.5, color:C.text2 }}>{f.pub}</span>],
-          ["Due Date", <span style={{ fontSize:12.5, color:st!=="paid"?C.red:C.text2, fontWeight:st!=="paid"?600:400 }}>{f.due}</span>]
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+        {[["Month", <span style={{ fontSize: 12.5, color: C.text2, fontWeight: 600 }}>{f.month}</span>],
+        ["Category", <CatPill cat={f.cat} />], ["Amount", <span style={{ fontSize: 15, fontWeight: 800, color: C.text }}>{fmtCurrency(f.amt)}</span>],
+        ["Published", <span style={{ fontSize: 12.5, color: C.text2 }}>{f.pub}</span>],
+        ["Due Date", <span style={{ fontSize: 12.5, color: st !== "paid" ? C.red : C.text2, fontWeight: st !== "paid" ? 600 : 400 }}>{f.due}</span>]
         ].map(([lbl, node]) => (
           <div key={lbl}>
-            <div style={{ fontSize:10, color:C.muted, fontWeight:600, textTransform:"uppercase", letterSpacing:".5px", marginBottom:2 }}>{lbl}</div>
+            <div style={{ fontSize: 10, color: C.muted, fontWeight: 600, textTransform: "uppercase", letterSpacing: ".5px", marginBottom: 2 }}>{lbl}</div>
             {node}
           </div>
         ))}
         {f.paidDate && f.paidDate !== "-" && (
           <div>
-            <div style={{ fontSize:10, color:C.muted, fontWeight:600, textTransform:"uppercase", letterSpacing:".5px", marginBottom:2 }}>Paid On</div>
-            <div style={{ fontSize:12.5, color:C.green, fontWeight:600 }}>{f.paidDate}</div>
+            <div style={{ fontSize: 10, color: C.muted, fontWeight: 600, textTransform: "uppercase", letterSpacing: ".5px", marginBottom: 2 }}>Paid On</div>
+            <div style={{ fontSize: 12.5, color: C.green, fontWeight: 600 }}>{f.paidDate}</div>
           </div>
         )}
       </div>
-      {st !== "paid" && st !== "pending_verification" && (
-        <div style={{ paddingTop:4 }}><PayNowBtn overdue={st==="overdue"} onClick={() => onPayNow(f.id)} /></div>
+      {st === "draft" ? (
+
+        <button
+          onClick={() => onPayNow(f)}
+          style={{
+            padding: "7px 16px",
+            borderRadius: 8,
+            border: "none",
+            background: "#facc15",
+            color: "#78350f",
+            fontWeight: 700,
+            cursor: "pointer"
+          }}
+        >
+          Preview
+        </button>
+
+      ) : st !== "paid" && st !== "pending_verification" && (
+
+        <div style={{ paddingTop: 4 }}>
+          <PayNowBtn
+            overdue={st === "overdue"}
+            onClick={() => onPayNow(f.id)}
+          />
+        </div>
+
       )}
       {st === "pending_verification" && (
-        <div style={{ paddingTop:4, display:"flex", justifyContent:"space-between", alignItems:"center" }}>
-          <span style={{ fontSize:12, color:C.muted2, fontWeight:600 }}>Waiting for verification from authority</span>
+        <div style={{ paddingTop: 4, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <span style={{ fontSize: 12, color: C.muted2, fontWeight: 600 }}>Waiting for verification from authority</span>
           {f.receiptUrl && (
             <button onClick={() => openReceipt(f.receiptUrl)}
-              style={{ background:"none", border:"none", padding:0, cursor:"pointer",
-                fontSize:11, color:C.accent, textDecoration:"underline" }}>
+              style={{
+                background: "none", border: "none", padding: 0, cursor: "pointer",
+                fontSize: 11, color: C.accent, textDecoration: "underline"
+              }}>
               View Receipt ↗
             </button>
           )}
@@ -275,7 +396,7 @@ function FeeCardMobile({ f, onPayNow }) {
 }
 
 /* ── main export ── */
-export function FeeSection({ fees, onPayNow }) {
+export function FeeSection({ fees, onPayNow, extraActions }) {
   const [monthFilter, setMonthFilter] = useState("all");
   const [isMobile, setIsMobile] = useState(window.innerWidth < 700);
 
@@ -304,17 +425,21 @@ export function FeeSection({ fees, onPayNow }) {
   );
 
   return (
-    <div style={{ background:C.white, border:`1.5px solid ${C.border}`, borderRadius:16,
-      overflow:"hidden", boxShadow:"0 1px 8px rgba(37,99,235,.07)" }}>
+    <div style={{
+      background: C.white, border: `1.5px solid ${C.border}`, borderRadius: 16,
+      overflow: "hidden", boxShadow: "0 1px 8px rgba(37,99,235,.07)"
+    }}>
       <style dangerouslySetInnerHTML={{ __html: styleTag }} />
       {/* Header */}
-      <div style={{ padding:"18px 20px 14px", borderBottom:`1.5px solid ${C.border}` }}>
-        <div style={{ fontSize:17, fontWeight:800, color:C.text, marginBottom:4 }}>Fee Log</div>
-        <div style={{ fontSize:12.5, color:C.muted, marginBottom:14 }}>Complete history of your fee payments</div>
+      <div style={{ padding: "18px 20px 14px", borderBottom: `1.5px solid ${C.border}` }}>
+        <div style={{ fontSize: 17, fontWeight: 800, color: C.text, marginBottom: 4 }}>Fee Log</div>
+        <div style={{ fontSize: 12.5, color: C.muted, marginBottom: 14 }}>Complete history of your fee payments</div>
         {/* Month pills */}
-        <div style={{ display:"flex", alignItems:"center", gap:6, flexWrap:"wrap" }}>
-          <div style={{ display:"flex", alignItems:"center", gap:5, fontSize:11.5, color:C.muted,
-            fontWeight:700, textTransform:"uppercase", letterSpacing:".6px", marginRight:2, flexShrink:0 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
+          <div style={{
+            display: "flex", alignItems: "center", gap: 5, fontSize: 11.5, color: C.muted,
+            fontWeight: 700, textTransform: "uppercase", letterSpacing: ".6px", marginRight: 2, flexShrink: 0
+          }}>
             🗓 Month:
           </div>
           {monthPills.filter(p => !p.empty).map(p => (
@@ -325,16 +450,17 @@ export function FeeSection({ fees, onPayNow }) {
               onClick={() => setMonthFilter(p.val)}
             />
           ))}
+          {extraActions}
         </div>
       </div>
       {/* Table / Cards */}
       {isMobile
-        ? <div style={{ padding:14, display:"flex", flexDirection:"column", gap:10 }}>
-            {filtered.length === 0
-              ? <div style={{ padding:"24px 0", textAlign:"center", color:C.muted, fontSize:13 }}>No fees for this period.</div>
-              : filtered.map(f => <FeeCardMobile key={f.id} f={f} onPayNow={onPayNow} />)
-            }
-          </div>
+        ? <div style={{ padding: 14, display: "flex", flexDirection: "column", gap: 10 }}>
+          {filtered.length === 0
+            ? <div style={{ padding: "24px 0", textAlign: "center", color: C.muted, fontSize: 13 }}>No fees for this period.</div>
+            : filtered.map(f => <FeeCardMobile key={f.id} f={f} onPayNow={onPayNow} />)
+          }
+        </div>
         : <FeeTableDesktop rows={filtered} onPayNow={onPayNow} />
       }
     </div>

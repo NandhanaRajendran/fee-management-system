@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import "../../styles/manual.css";
+import API from "../../config/api";
 
 const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-const API = "https://mess-management-system-q6us.onrender.com"
+//const API = "https://mess-management-system-q6us.onrender.com"
 //const API = "http://localhost:8000"
 
 function PublishRent() {
@@ -18,38 +19,35 @@ function PublishRent() {
     fetch(`${API}/api/students`)
       .then(res => res.json())
       .then(data => {
+        console.log(data);
         const studentArray = Array.isArray(data) ? data : [];
+        console.log(studentArray);
+        studentArray.forEach(s => {
+          console.log(
+            s.name,
+            s.hostelName,
+            s.room,
+            s.HDF
+          );
+        });
         const monthIndex = months.indexOf(selectedMonth);
         const targetYear = Number(selectedYear);
 
-        if (targetYear === 2026 && monthIndex > 5) {
-          setStudents([]);
-          return;
-        }
 
-        const mapped = studentArray.filter(s => {
-          const admissionYear = parseInt(String(s.admissionNo).substring(0, 4));
-          if (isNaN(admissionYear)) return false;
-          if (targetYear === 2026 && (admissionYear === 2022 || admissionYear === 2024)) return false;
-          return targetYear >= admissionYear && targetYear < admissionYear + 4;
-        }).map(s => {
-          const admissionYear = parseInt(String(s.admissionNo).substring(0, 4));
-          const monthsOffset = (targetYear - admissionYear) * 12;
-          const totalPaid = s.rentPaidMonths || 0;
-          let paidThisYear = totalPaid - monthsOffset;
-          if (paidThisYear < 0) paidThisYear = 0;
-          if (paidThisYear > 12) paidThisYear = 12;
-          const isRecentlyPublished = s.feeUpdatedAt ? (new Date() - new Date(s.feeUpdatedAt)) / (1000 * 60 * 60 * 24) < 10 : false;
-          const isNotYetPending = (monthIndex === (targetYear === 2026 ? 5 : 11)) && isRecentlyPublished;
-          const isDue = monthIndex >= paidThisYear && !isNotYetPending;
-          return {
+
+        const mapped = studentArray
+          .filter(s =>
+            s.hostelName &&
+            s.room &&
+            s.HostelRent &&
+            s.rentMonth === selectedMonth
+          )
+          .map(s => ({
             id: s.admissionNo,
             name: s.name,
             month: selectedMonth,
-            rent: Math.round((s.HostelRent || 1860) / 6),
-            isDue: isDue
-          };
-        }).filter(s => s.isDue);
+            rent: s.HostelRent
+          }));
 
         setStudents(mapped);
       })

@@ -26,7 +26,7 @@ const PTADashboard = () => {
     const fetchStudents = async () => {
       setLoading(true);
       try {
-        const response = await fetch("http://localhost:5001/api/pta/students");
+        const response = await fetch("https://mess-management-system-q6us.onrender.com/api/pta/students");
         const data = await response.json();
         setStudents(data);
       } catch (error) {

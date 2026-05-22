@@ -53,7 +53,7 @@ exports.login = async (req, res) => {
     // 🎓 If student
     if (user.role === "student") {
       profile = await Student.findById(user.refId).select(
-        "name admissionNo className",
+        "name admissionNo className attendance hostelName",
       );
     }
 

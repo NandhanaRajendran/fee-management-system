@@ -9,6 +9,7 @@ export default function Sidebar({ isOpen, closeMenu }) {
     { label: "Attendance",  path: "/mess/attendance" },
     { label: "Expenses",    path: "/mess/expenses"   },
     { label: "Mess Bill",   path: "/mess/messbill"   },
+    { label: "Due Sheet",   path: "/mess/duesheet"   },
   ];
 
   return (
