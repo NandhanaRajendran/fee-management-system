@@ -12,7 +12,7 @@ export default function LoginPage() {
   const passRef = useRef(null);
   //const API = "https://mess-management-system-q6us.onrender.com"
   //const API = "http://localhost:8000"
-  
+
   useEffect(() => {
     const handleKeys = (e) => {
       // Space key to focus username (if not already focused or typing elsewhere)
@@ -61,6 +61,9 @@ export default function LoginPage() {
       // ✅ Save login info
       sessionStorage.setItem("user", JSON.stringify(data.user));
       sessionStorage.setItem("token", data.token);
+
+      console.log("ROLE:", data.user.role);
+      console.log("USERNAME:", data.user.username);
 
       // 🔥 Redirect based on role
       switch (data.user.role) {
