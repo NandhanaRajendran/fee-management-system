@@ -1,7 +1,7 @@
 const mongoose = require("mongoose");
 const Due = require("./models/Due");
 
-const MONGO_URI = "mongodb+srv://nandhanarajendran2004_db_user:peg5SmfAhJIn1bSz@cluster0.i3ldyk7.mongodb.net/feeDB?appName=Cluster0";
+const MONGO_URI = process.env.MONGO_URI;
 
 async function checkHostelDues() {
     await mongoose.connect(MONGO_URI);
